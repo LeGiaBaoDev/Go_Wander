@@ -1,11 +1,11 @@
 # ADR-0004 — Mô hình dữ liệu PostgreSQL/PostGIS
 
 - **Trạng thái:** Proposed — chờ chủ dự án chốt
-- **Ngày:** 18-11-2026
+- **Ngày:** 18-11-2026 (thân viết lại theo ADR-0002 mới: tài khoản quán, chi nhánh, nhân viên, thiết bị)
 - **Người quyết định:** chủ dự án (chờ chốt)
 - **Liên quan:** `ADR-0003-api-contract-auth-rbac.md`, `ADR-0002-account-roles.md`, `../02-architecture/01-system-context.md`, `../02-architecture/02-containers.md`, `../01-product/06-saved-and-contributed-places.md`, `../01-product/08-accounts-roles-partners.md`, `../01-product/09-stories-explore-search.md`
 
-> **Cập nhật 18-11-2026 (ADR-0002 viết lại):** `partner.shop_membership`, `staff_password_reset` và “một/nhiều owner” là **mô hình cũ**. Mô hình mới cần: `shop_account` (mã quán, `recovery_email`, `notify_email`; **không** có mật khẩu quán), `business`, `branch` (địa chỉ, giờ, khung đặt trước), `staff` (mã nhân viên `<mã>-<vai trò><số>`, vai trò, chi nhánh, mật khẩu riêng, trạng thái), `device_session` (nhiều thiết bị, đăng xuất từng máy), `booking` có trạng thái và **chỗ cho thanh toán** (giai đoạn 3, `../01-product/10-business-model.md`), nhật ký thao tác gắn mã nhân viên. Phần dưới cần viết lại theo đó. **Bổ sung 18-11-2026:** `booking.account_id` **bắt buộc** (không đặt vãng lai, không `guest`); bảng đếm `dish_order_daily` (branch, món, ngày, số lượt, chỉ đơn đã xác nhận/đã đến) cho “món đặt nhiều” theo tháng và nhãn “Hot”.
+> **Viết lại 18-11-2026.** Bản trước dùng `partner.shop_membership`, `shop_invite`, `staff_password_reset` và “một/nhiều owner”. ADR-0002 mới thay bằng `shop_account` (không có mật khẩu quán), `business`, `branch`, `staff` (mã nhân viên + mật khẩu riêng), `device_session`, `one_time_token`. `booking.account_id` **bắt buộc** (không đặt vãng lai). Thêm `dish_order_daily` cho “món đặt nhiều” theo tháng và nhãn “Hot”, `outbox_event` cho email/thông báo.
 
 ## Bối cảnh
 
@@ -13,8 +13,8 @@ GoWander lưu nhiều loại dữ liệu có tính chất rất khác nhau:
 
 - **Nội dung địa lý:** place/POI, category, guide/story, media, nguồn và giấy phép.
 - **Dữ liệu tham chiếu:** coverage area, transit feed, graph build, OSM/GTFS metadata.
-- **Danh tính và quyền:** account client/partner, admin account, session, vai trò theo quán, lời mời, hồ sơ đối tác và giấy tờ.
-- **Nghiệp vụ:** feedback, đề xuất địa điểm, moderation, thông báo (4 hộp thư), booking/cọc (R7), audit.
+- **Danh tính và quyền:** account khách, admin account, **tài khoản quán, chi nhánh, nhân viên (mã nhân viên), phiên theo thiết bị**, hồ sơ đối tác và giấy tờ.
+- **Nghiệp vụ:** feedback, đề xuất địa điểm, moderation, thông báo (4 hộp thư), booking (đặt trước từ giai đoạn 1; thu tiền giai đoạn 3), audit.
 - **Dữ liệu local-first:** plan và saved places nằm trên máy; **không** lưu mặc định trên server ở R1.
 
 Ràng buộc:
@@ -50,15 +50,15 @@ Một database, các schema theo bounded context:
 | `catalog` | Discover | source, category, category_translation, place, place_translation, place_category, story, story_revision, story_translation, story_media, story_place, place_submission, place_submission_photo, place_duplicate_candidate |
 | `media` | Media | media, media_variant |
 | `mobility` | Mobility | coverage_area, transit_feed, graph_build, graph_build_feed, route_cache (chỉ khi cần) |
-| `partner` | Partner/Booking (phần quán) | shop, shop_membership, shop_invite, staff_password_reset, partner_application, application_document, document_access_log, menu_item, shop_booking_policy |
-| `booking` | Booking | booking, booking_item, booking_status_event, payment, refund |
+| `partner` | Partner/Booking (phần quán) | shop_account, business, branch, branch_booking_policy, staff, device_session, one_time_token, recovery_email_change, partner_application, application_document, document_access_log, menu_item, dish_order_daily |
+| `booking` | Booking | booking, booking_item, booking_status_event, branch_slot_load, payment, refund (thu tiền từ giai đoạn 3) |
 | `engagement` | Community/Feedback | feedback, notification, notification_delivery |
-| `backoffice` | Admin/Backoffice | audit_log, import_run, import_issue |
+| `backoffice` | Admin/Backoffice | audit_log, outbox_event, import_run, import_issue |
 
 Quy tắc:
 
 - Mỗi bảng có **một module sở hữu**; module khác chỉ đọc qua view/API nội bộ, không ghi trực tiếp.
-- Foreign key giữa schema được phép để bảo đảm toàn vẹn (ví dụ `booking.shop_id → partner.shop.id`), nhưng quyền ghi vẫn thuộc module sở hữu.
+- Foreign key giữa schema được phép để bảo đảm toàn vẹn (ví dụ `booking.branch_id → partner.branch.id`), nhưng quyền ghi vẫn thuộc module sở hữu.
 - Báo cáo/Admin có thể dùng **view chỉ đọc** (`backoffice.v_*`) thay vì join bảng nóng trong code.
 - Không tạo schema cho module chưa làm (Community/AI/Ads/Affiliate) khi chưa có bảng thật; seam nằm ở module/feature flag.
 - Tên bảng số nhiều hay số ít: chọn **số ít** (`place`, `booking`) cho nhất quán; tên cột `snake_case`.
@@ -85,7 +85,6 @@ erDiagram
   ACCOUNT ||--o{ ACCOUNT_SESSION : has
   ACCOUNT ||--o{ AUTH_IDENTITY : links
   ACCOUNT ||--o{ PLACE_SUBMISSION : submits
-  ACCOUNT ||--o{ SHOP_MEMBERSHIP : joins
   ACCOUNT ||--o{ BOOKING : makes
   ADMIN_ACCOUNT ||--o{ ADMIN_SESSION : has
   ADMIN_ACCOUNT ||--o{ ADMIN_ROLE : has
@@ -102,11 +101,17 @@ erDiagram
   STORY_REVISION ||--o{ STORY_MEDIA : contains
   STORY ||--o{ STORY_PLACE : linked
 
-  SHOP ||--o{ SHOP_MEMBERSHIP : has
-  SHOP ||--o{ SHOP_INVITE : invites
-  SHOP ||--o{ MENU_ITEM : sells
-  SHOP ||--o{ SHOP_BOOKING_POLICY : configures
-  SHOP ||--o{ BOOKING : receives
+  SHOP_ACCOUNT ||--|| BUSINESS : legal
+  SHOP_ACCOUNT ||--o{ BRANCH : has
+  SHOP_ACCOUNT ||--o{ STAFF : employs
+  BRANCH ||--o{ STAFF : assigned
+  STAFF ||--o{ DEVICE_SESSION : signs_in
+  STAFF ||--o{ ONE_TIME_TOKEN : receives
+  SHOP_ACCOUNT ||--o{ MENU_ITEM : sells
+  BRANCH ||--|| BRANCH_BOOKING_POLICY : configures
+  BRANCH ||--o{ BOOKING : receives
+  BRANCH ||--o{ BRANCH_SLOT_LOAD : tracks
+  BRANCH ||--o{ DISH_ORDER_DAILY : counts
   BOOKING ||--o{ BOOKING_ITEM : contains
   BOOKING ||--o{ PAYMENT : pays
   BOOKING ||--o{ REFUND : refunds
@@ -192,7 +197,7 @@ erDiagram
 
 #### 4.2 Danh tính và quyền (`identity`)
 
-**`identity.account`** — client + partner:
+**`identity.account`** — khách (tài khoản cá nhân):
 
 | Cột | Ghi chú |
 |---|---|
@@ -207,7 +212,7 @@ erDiagram
 | `created_at`, `updated_at`, `deleted_at`, `anonymized_at` | |
 
 - `identity.auth_identity` (account_id, provider `google|apple`, subject, email_at_provider, linked_at) unique (provider, subject).
-- `identity.account_session` (id, account_id, realm `client|partner`, token_hash bytea unique, user_agent, ip_hash, created_at, last_seen_at, expires_at, revoked_at). Chỉ lưu hash token, không lưu token gốc.
+- `identity.account_session` (id, account_id, realm `client`, token_hash bytea unique, user_agent, ip_hash, created_at, last_seen_at, expires_at, revoked_at). Chỉ lưu hash token, không lưu token gốc. Phiên của **nhân viên quán** nằm ở `partner.device_session` (mục 4.3), không dùng bảng này.
 - `identity.verification_code` (id, account_id, purpose `verify_email|reset_password`, code_hash, expires_at, attempts, consumed_at, created_at); dùng một lần; xoá/ẩn sau khi dùng. Mã 2FA Admin là TOTP, không dùng bảng này.
 - `identity.password_history` (account_id, password_hash, created_at) — giữ 3 hash gần nhất để chặn tái sử dụng; không lưu plaintext.
 - `identity.admin_account` (id, email, password_hash, display_name, status, totp_secret_encrypted, totp_confirmed_at, created_by, last_login_at, created_at, deleted_at). Admin tách hẳn account client.
@@ -224,19 +229,34 @@ erDiagram
 
 #### 4.3 Đối tác, quán, thực đơn (`partner`)
 
-**`partner.shop`**:
+**`partner.shop_account`** — tài khoản quán do Admin cấp sau khi duyệt hồ sơ:
 
-- `id`, `code` (2–6 chữ cái in hoa, unique, không đổi sau khi cấp mã nhân viên), `place_id` (FK `catalog.place`, unique), `name`, `kind` (`food|cafe|stay|tour|other`), `status` (`pending|active|suspended|closed`), `plan` (`basic|pro` — DEMO, chưa chốt giá), `features jsonb` (booking, preorder, deposit), `next_employee_seq` (int, cấp phát trong transaction), `created_at`, `updated_at`.
-- `place_id` bắt buộc khi shop active; trước đó có thể null trong hồ sơ.
-- Không lưu toạ độ riêng nếu đã có place; nếu cần địa chỉ liên hệ thì dùng cột text.
+- `id`, `code` (2–6 chữ in hoa, unique, không đổi sau khi cấp mã nhân viên), `business_id`, `application_id`, `status` (`active|suspended|closed`), `plan` (`basic|pro`, DEMO, chưa chốt giá), `limits jsonb` (số chi nhánh/thiết bị/nhân viên theo gói, `ASSUMED`), `features jsonb`, `recovery_email citext` (khôi phục và định danh), `notify_email citext` nullable (nhận thông báo đơn, không có quyền khôi phục), `require_device_approval bool default false`, `next_staff_seq int`, `created_at`, `updated_at`.
+- **Không có cột mật khẩu quán.** Bí mật nằm ở mật khẩu riêng của từng `staff`.
+- `next_staff_seq` cấp phát trong transaction: `UPDATE ... SET next_staff_seq = next_staff_seq + 1 RETURNING` (số chỉ tăng nên mã không bao giờ tái sử dụng).
 
-**`partner.shop_membership`**:
+**`partner.business`**: id, `legal_name`, `tax_id`, `type` (`household|company`), `representative_name`, `phone`. Sao chép từ hồ sơ đã duyệt (snapshot), để hồ sơ gốc xoá được file mà doanh nghiệp không mất thông tin.
 
-- `shop_id`, `account_id`, `role` (`owner|manager|staff`), `status` (`invited|active|suspended|revoked`), `employee_code` (text; unique trong quán), `employee_seq` (int; unique trong quán, không tái sử dụng), `invited_by`, `joined_at`, `revoked_at`.
-- Mã nhân viên format `<shop.code>-<role_prefix><seq>`; prefix chỉ là lịch sử cấp, **không dùng để suy quyền**; quyền theo `role` hiện tại.
-- Unique (shop_id, account_id) cho membership active; **R1 partial unique một owner active**; **R7 bỏ partial unique, cho nhiều owner**, nhưng application/service phải bảo đảm còn ít nhất một owner active.
-- `shop_invite`: id, shop_id, email/phone, role, token_hash, expires_at, accepted_at, revoked_at, created_by. Token một lần, **hết hạn 7 ngày** (ADR-0002).
-- `staff_password_reset`: id, shop_id, account_id, issued_by, temp_password_hash, expires_at, used_at, must_change, created_at. Chỉ lưu hash mật khẩu tạm; hết hạn 24 giờ; dùng một lần; audit khi tạo/dùng.
+**`partner.branch`**: id, `shop_account_id`, `name`, `place_id` (FK `catalog.place`, unique khi active), `address`, `location geography(Point,4326)` (khi chưa có place), `opening_hours`, `status` (`active|closed`), `version`, `created_at`, `updated_at`. Mỗi chi nhánh có địa chỉ, giờ mở, khung đặt trước và đơn riêng.
+
+**`partner.staff`** — một người trong quán, định danh để đăng nhập:
+
+- `id`, `shop_account_id`, `branch_id` (null chỉ với `owner`), `role` (`owner|manager|staff`), `staff_code` (`<shop.code>-<tiền tố><số>`, ví dụ `LL-NV007`, **unique toàn cục**), `staff_seq` (unique trong quán), `full_name`, `phone`, `shift`, `password_hash` (Argon2id; null khi chờ đặt mật khẩu), `must_change_password`, `status` (`pending|active|locked|deleted`), `failed_attempts`, `locked_until`, `last_login_at`, `created_by`, `created_at`, `updated_at`, `deleted_at`.
+- Check: `role='owner'` ⇒ `branch_id is null`; `role in ('manager','staff')` ⇒ `branch_id is not null`.
+- Tiền tố trong mã chỉ là lịch sử cấp; **quyền theo `role` hiện tại**, không suy từ mã. Đổi vai trò không đổi mã.
+- Luôn còn ít nhất một `owner` `active` mỗi quán: service kiểm trong cùng transaction, có test.
+- Xoá: `status='deleted'`, xoá `password_hash`, **giữ `staff_code` và `full_name`** để nhật ký cũ vẫn đọc được; `staff_seq` không tái sử dụng.
+- Khoá sau 5 lần sai: `locked_until = now() + 15 phút`; tự mở, không khoá vĩnh viễn.
+
+**`partner.device_session`** — nhiều thiết bị cùng lúc, đăng xuất từng máy:
+
+- `id`, `staff_id`, `shop_account_id`, `device_id` (uuid do app sinh, lưu Keychain/Keystore), `device_name`, `platform` (`ios|android|web`), `token_hash bytea unique` (chỉ lưu hash), `branch_id` (chi nhánh đang làm), `user_agent`, `ip_hash`, `status` (`active|pending_approval|revoked|expired`), `created_at`, `last_seen_at`, `expires_at`, `revoked_at`, `revoked_by`.
+- Lần đầu một `staff` xuất hiện trên `device_id` mới: ghi `outbox_event` gửi email báo Chủ quán; nếu `require_device_approval` thì phiên bắt đầu ở `pending_approval`.
+- Đổi/đặt lại mật khẩu, khoá, xoá `staff`: thu hồi mọi `device_session` của người đó.
+
+**`partner.one_time_token`**: id, `staff_id`, `purpose` (`set_password|reset_password|temp_password`), `token_hash`, `expires_at` (24 giờ với `set_password`/`temp_password`, 30 phút với `reset_password`), `used_at`, `issued_by_type` (`staff|admin|system`), `issued_by_id`, `created_at`. Chỉ lưu hash; mật khẩu tạm hiện đúng một lần cho người cấp, không lưu dạng đọc được.
+
+**`partner.recovery_email_change`**: id, `shop_account_id`, `new_email`, `confirmed_old_at`, `approved_by_admin_id`, `approved_at`, `status`, `created_at`. Đổi email khôi phục cần xác nhận ở email cũ **và** Admin duyệt.
 
 **`partner.partner_application`**:
 
@@ -244,26 +264,32 @@ erDiagram
 - `application_document`: id, application_id, type (business_registration, id_card, food_safety, security_order, travel_licence, bank_confirmation, consent), storage_key, mime, bytes, sha256, status (`pending|accepted|rejected|expired`), expires_at, reviewed_by, reviewed_at.
 - `document_access_log`: document_id, admin_id, action `view|download`, at, request_id. Không log nội dung file.
 - Hồ sơ bị từ chối/đóng: xoá file sau 30 ngày (đề xuất, chờ chốt); DB giữ metadata + lý do.
+- Khi Admin duyệt: **một transaction** tạo `business`, `shop_account`, `branch` đầu tiên, `staff` Chủ quán `CQ001` (`pending`), `one_time_token` loại `set_password` và `outbox_event` gửi mã Chủ quán + liên kết đặt mật khẩu tới email đăng ký. Không gửi mật khẩu dạng chữ.
 
 **`partner.menu_item`**:
 
-- `id`, `shop_id`, `kind` (`food|service`), `name`, `description`, `price_vnd bigint`, `currency 'VND'`, `image_media_id` (bắt buộc với `kind='food'`), `group`, `status` (`on_sale|sold_out`), `sort_order`, `created_at`, `updated_at`, `deleted_at`.
+- `id`, `shop_account_id`, `branch_id` (null = áp dụng mọi chi nhánh), `kind` (`food|service`), `name`, `description`, `price_vnd bigint`, `currency 'VND'`, `image_media_id` (bắt buộc với `kind='food'`), `group`, `status` (`on_sale|sold_out`), `sort_order`, `version`, `created_at`, `updated_at`, `deleted_at`.
 - Check constraint: `kind='food'` ⇒ `image_media_id is not null` (quy ước “món ăn luôn có ảnh”).
 - Xoá mềm; booking item giữ snapshot tên/giá.
 
-**`partner.shop_booking_policy`**:
+**`partner.branch_booking_policy`**:
 
-- `shop_id` unique, `slot_minutes`, `capacity_per_slot`, `min_party`, `max_party`, `advance_min_days`, `advance_max_days`, `deposit_type` (`none|per_person|percent`), `deposit_value`, `cancel_policy jsonb`, `updated_at`.
+- `branch_id` unique, `slot_minutes`, `capacity_per_slot`, `min_party`, `max_party`, `advance_min_days`, `advance_max_days`, `deposit_type` (`none|per_person|percent`; giai đoạn 1 luôn `none`), `deposit_value`, `cancel_policy jsonb`, `version`, `updated_at`.
 - Chính sách được **snapshot** vào booking lúc đặt; sửa sau không đổi đơn cũ.
 
-#### 4.4 Booking, cọc, thanh toán (`booking`, R7)
+**`partner.dish_order_daily`** — bảng đếm cho “món đặt nhiều” theo tháng và nhãn “Hot”:
+
+- `branch_id`, `menu_item_id`, `day date`, `orders int`, `quantity int`; khoá chính (`branch_id`, `menu_item_id`, `day`). Chỉ tính đơn **đã xác nhận/đã đến**.
+- Cập nhật bằng worker đọc `booking_status_event` (upsert idempotent), **không tính tại thời điểm request**; có thể dựng lại từ sự kiện.
+
+#### 4.4 Booking, thanh toán (`booking`; đặt trước từ giai đoạn 1, thu tiền từ giai đoạn 3)
 
 **`booking.booking`**:
 
 | Cột | Ghi chú |
 |---|---|
 | `id` | uuid |
-| `shop_id`, `account_id` | FK |
+| `shop_account_id`, `branch_id`, `account_id` | FK; **`account_id` NOT NULL** (không đặt vãng lai, không `guest`) |
 | `status` | `pending`, `confirmed`, `seated`, `completed`, `cancelled_by_customer`, `cancelled_by_shop`, `no_show` |
 | `party_size` | int > 0 |
 | `slot` | `tstzrange` — thời gian giữ bàn |
@@ -273,9 +299,10 @@ erDiagram
 | `note` | text ngắn |
 | `created_at`, `updated_at`, `cancelled_at` | |
 
-- Exclusion constraint: `EXCLUDE USING gist (shop_id WITH =, slot WITH &&) WHERE (status IN ('pending','confirmed','seated'))` để chặn trùng ô bàn; kiểm ở DB, không chỉ app.
+- **Giữ chỗ theo sức chứa, nguyên tử:** `branch_slot_load` (`branch_id`, `slot_start`, `booked_party`) cập nhật cùng transaction với `booking` bằng một câu `UPDATE ... SET booked_party = booked_party + :n WHERE branch_id = :b AND slot_start = :s AND booked_party + :n <= :capacity`; 0 dòng bị ảnh hưởng ⇒ hết chỗ ⇒ `409`. Thay cho exclusion constraint (chỉ đúng khi mỗi ô một đơn, trái với `capacity_per_slot`). Có test đồng thời.
+- `version int` cho optimistic locking khi quán xác nhận/đổi giờ/từ chối; sai phiên bản ⇒ `409`.
 - `booking_item` (booking_id, menu_item_id nullable, name_snapshot, unit_price_vnd, quantity) — giữ tên/giá lúc đặt.
-- `booking_status_event` (booking_id, from_status, to_status, actor_type, actor_id, reason, created_at) — lịch sử trạng thái.
+- `booking_status_event` (booking_id, from_status, to_status, `actor_type` `account|staff|admin|system`, `actor_id`, `staff_code` (bản chụp để nhật ký đọc được sau khi xoá nhân viên), reason, created_at) — lịch sử trạng thái; là nguồn để dựng lại `dish_order_daily`.
 - `payment` (booking_id, provider, provider_ref, amount_vnd, status `pending|authorized|captured|failed|refunded`, idempotency_key, created_at, captured_at); `refund` (payment_id, amount_vnd, status, reason, created_at, completed_at).
 - Không lưu số thẻ/CVV; cổng thanh toán giữ. Nếu chưa chốt thu cọc qua GoWander, bảng payment để seam, không bật endpoint.
 
@@ -288,7 +315,7 @@ erDiagram
 
 **`engagement.notification`** — 4 hộp thư:
 
-- `audience` (`client|shop|partner|admin`), `recipient_id` (account_id/shop_id/admin_account_id), `shop_id` nullable, `kind`, `title`, `body`, `payload jsonb`, `read_at`, `dedupe_key`, `created_at`, `expires_at`.
+- `audience` (`client|shop|partner|admin`), `recipient_id` (account_id / staff_id / admin_account_id), `shop_account_id` và `branch_id` nullable, `kind`, `title`, `body`, `payload jsonb`, `read_at`, `dedupe_key`, `created_at`, `expires_at`.
 - `notification_delivery` (notification_id, channel `in_app|email|sms|push`, status, attempts, last_error, sent_at) — email/SMS qua outbox; không lưu nội dung nhạy cảm trong payload.
 - AdminInbox là `audience='admin'` + kind task; AdminNotifications là nơi gửi (không phải bảng riêng).
 - ShopNotifications/PartnerNotifications dùng cùng bảng, lọc theo audience/recipient; không tạo 4 bảng trùng schema.
@@ -297,9 +324,10 @@ erDiagram
 
 **`backoffice.audit_log`**:
 
-- id, actor_type (`account|admin|system`), actor_id, action, entity_type, entity_id, before jsonb, after jsonb, request_id, ip_hash, created_at.
+- id, `actor_type` (`account|staff|admin|system`), `actor_id`, `staff_code` (bản chụp), action, entity_type, entity_id, before jsonb, after jsonb, request_id, ip_hash, created_at.
 - Append-only; role app chỉ `INSERT` (qua service) và `SELECT` cho Admin được phép; không `UPDATE/DELETE`.
 - `before/after` đã che PII/bí mật; không lưu token/mật khẩu/giấy tờ.
+- **`backoffice.outbox_event`**: id, `aggregate_type`, `aggregate_id`, `type`, `payload jsonb` (đã che PII), `created_at`, `processed_at`, `attempts`, `last_error`. Ghi **cùng transaction** với thay đổi nghiệp vụ; worker lấy bằng `FOR UPDATE SKIP LOCKED`, gửi email/thông báo, cập nhật bảng đếm, rồi đánh dấu `processed_at`. Xử lý idempotent (`dedupe_key`).
 
 **`backoffice.import_run`**:
 
@@ -326,8 +354,8 @@ erDiagram
 | Kiểm trùng đề xuất | `ST_DWithin` 50 m + trigram tên; trả candidate, không auto-merge | GiST + GIN trigram |
 | Tìm theo tên | `search_text % :q` / `similarity`; ưu tiên prefix; limit | GIN `pg_trgm` |
 | Lọc category/status | B-tree composite `(status, primary_category_id)`; join `place_category` cho lọc nhiều category; partial index `where status='published'` | B-tree |
-| Lịch sử đơn | `(shop_id, created_at desc)`; `(account_id, created_at desc)` | B-tree |
-| Chống trùng slot | Exclusion constraint `shop_id + tstzrange` | GiST |
+| Lịch sử đơn | `(branch_id, created_at desc)`; `(account_id, created_at desc)`; `staff (shop_account_id, status)`; unique `staff_code` | B-tree |
+| Chống vượt sức chứa | `UPDATE` có điều kiện trên `branch_slot_load` (mục 4.4) | PK `(branch_id, slot_start)` |
 
 - Khoảng cách/tìm kiếm mặc định **bán kính 2 km** cho nearby, tối đa 10 km; *(ASSUMED, cấu hình)*.
 - `search_text` chuẩn hoá: lowercase, bỏ dấu tiếng Việt, gộp khoảng trắng; app ghi khi tạo/sửa; test với “Nguyễn Huệ”/“nguyen hue”.
@@ -370,11 +398,29 @@ erDiagram
 | Session | DB | Hết hạn/thu hồi | Token hash; `ip_hash` 30 ngày |
 | Feedback | DB | 12 tháng | Contact chỉ khi cần phản hồi |
 | Giấy tờ đối tác | Storage + metadata | 30 ngày sau từ chối/đóng | Mã hoá; access log |
+| Nhân viên quán đã xoá | DB | Giữ `staff_code` + `full_name` theo audit 24 tháng; xoá mật khẩu ngay | Họ tên, SĐT, ca làm là dữ liệu cá nhân; chưa có DPIA |
+| `device_session` | DB | Hết hạn/thu hồi; `ip_hash` 30 ngày | Chỉ lưu hash token |
 | Audit | DB | 24 tháng | Append-only; che PII |
 | Ảnh | Storage | Theo vòng đời nội dung | Credit/license; xoá khi không dùng |
 | Route cache | Không có R1 | — | Nếu thêm: TTL ngắn, hash, không toạ độ thô |
 
 > Các con số retention là **đề xuất**, phải được chốt trong `05-security-privacy.md` và rà pháp lý (Luật 91/2025, NĐ 356/2025) trước khi mở tính năng tương ứng. Chưa có luật sư xác nhận.
+
+### 9. Mẫu thiết kế trong dữ liệu
+
+| Vấn đề | Mẫu | Chỗ dùng |
+|---|---|---|
+| Ghi nghiệp vụ và gửi email/thông báo không ghi kép | **Transactional Outbox** | `outbox_event` (mục 4.6) |
+| Hai thiết bị sửa cùng bản ghi | **Optimistic locking** (`version`) | `booking`, `menu_item`, `branch`, `branch_booking_policy` |
+| Chống vượt sức chứa khi đặt đồng thời | **Atomic conditional update** | `branch_slot_load` |
+| Cần lịch sử, không sửa quá khứ | **Append-only event log** | `audit_log`, `booking_status_event` |
+| Đơn cũ không đổi khi quán sửa chính sách/giá | **Snapshot** | `policy_snapshot`, `name_snapshot`, `staff_code` |
+| Số báo cáo tính nhanh mà không quét đơn | **Read model (projection)** dựng bởi worker, idempotent | `dish_order_daily` |
+| Mã không tái sử dụng | **Counter allocation** trong transaction | `shop_account.next_staff_seq` |
+| Xoá mà vẫn truy vết | **Soft delete + tombstone** | `staff` (giữ mã và tên, xoá mật khẩu) |
+| Truy cập dữ liệu có ranh giới | **Repository theo module** (truy vấn `sqlc` riêng từng schema) | Mỗi module chỉ ghi bảng của mình |
+
+> Không thêm lớp trừu tượng tổng quát (base repository, ORM chung) khi chưa có vấn đề ở bảng trên.
 
 ## Lý do
 
@@ -420,7 +466,7 @@ erDiagram
 - UUIDv7 sinh ở app đòi hỏi thư viện/thống nhất; seed/import phải sinh ID.
 - JSONB block/policy cần validate schema và test kỹ; dễ lưu dữ liệu sai nếu chỉ tin client.
 - Retention/PII cần chính sách và job xoá/anonymize; chưa có luật sư.
-- Exclusion constraint booking cần hiểu Postgres; có thể chặn nhầm nếu slot không chuẩn hoá.
+- Giữ chỗ bằng `UPDATE` có điều kiện trên `branch_slot_load` cần test đồng thời; slot không chuẩn hoá (lệch phút) sẽ tạo nhiều dòng đếm.
 
 ### Rủi ro
 
@@ -440,14 +486,15 @@ erDiagram
 - [ ] Chốt công cụ migration/version PostgreSQL ở `../04-development/01-toolchain.md` (bước scaffold).
 - [ ] Rà ODbL/CC BY-SA và retention với luật sư trước khi publish dữ liệu/ảnh.
 - [ ] Thiết kế job xoá/anonymize account, document, feedback; ghi bằng chứng chạy thử.
-- [ ] Khi làm R1.5: bổ sung submission/photo; R6: shop/membership, `shop.code`, `employee_code`/`employee_seq`, `shop_invite` 7 ngày; R7: booking/payment và máy quán.
-- [ ] Test cấp mã nhân viên không trùng/không tái sử dụng; test reset mật khẩu tạm 24 giờ, một lần, bắt đổi, audit.
-- [ ] Rà `staff_password_reset` với chính sách mật khẩu 6+ của thành viên quán (ADR-0002/0003).
+- [ ] Khi làm R1.5: bổ sung submission/photo. R6: `shop_account`, `business`, `branch`, `staff` (`staff_code`, `next_staff_seq`), `device_session`, `one_time_token`, `outbox_event`. Giai đoạn 3: `payment`, `refund` (xem `../01-product/10-business-model.md`).
+- [ ] Test cấp mã nhân viên không trùng/không tái sử dụng (đồng thời); test `owner` cuối cùng không xoá được; test `device_session` thu hồi khi đổi mật khẩu.
+- [ ] Test `branch_slot_load` khi nhiều đơn đặt đồng thời; test worker `outbox_event` idempotent và `dish_order_daily` dựng lại được từ `booking_status_event`.
+- [ ] DPIA và luật sư rà dữ liệu nhân viên (họ tên, SĐT, ca làm) trước khi mở R6.
 
 ## Tham khảo
 
 - `../02-architecture/02-containers.md` — PostgreSQL/PostGIS là container dữ liệu duy nhất.
 - `../01-product/06-saved-and-contributed-places.md` — saved places local-first, submission/moderation.
-- `../01-product/08-accounts-roles-partners.md` — account, shop_membership, hồ sơ đối tác, booking/cọc.
+- `../01-product/08-accounts-roles-partners.md` — tài khoản quán, nhân viên, chi nhánh, hồ sơ đối tác, đặt trước.
 - `../01-product/09-stories-explore-search.md` — story block, media credit, place-card.
 - Repo cũ `../GoWander`: `ADR-028` (PostGIS, schema, quyền DB), `ADR-035` (R2/media), `ADR-036` (local storage), `ADR-041` (Editor.js block JSON). Chỉ tham khảo; v2 có schema/retention riêng.
