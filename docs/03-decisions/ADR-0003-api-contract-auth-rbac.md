@@ -1,13 +1,11 @@
 # ADR-0003 — Hợp đồng API, đăng nhập, phiên và RBAC
 
 - **Trạng thái:** Proposed — chờ chủ dự án chốt
-- **Ngày:** 18-11-2026
+- **Ngày:** 18-11-2026 (thân viết lại theo ADR-0002 mới: tài khoản quán do Admin cấp, mã nhân viên + mật khẩu riêng)
 - **Người quyết định:** chủ dự án (chờ chốt)
 - **Liên quan:** `ADR-0001-web-stack.md`, `ADR-0002-account-roles.md`, `../02-architecture/01-system-context.md`, `../02-architecture/02-containers.md`, `../01-product/08-accounts-roles-partners.md`, `../04-development/02-conventions.md`
 
-> **Cập nhật 18-11-2026 (ADR-0002 viết lại):** mô hình quán đổi từ “một kiểu tài khoản + vai trò (`shop_membership`)” sang **tài khoản quán do Admin cấp** (mã tài khoản + mật khẩu), **đăng nhập bằng mã nhân viên + mật khẩu riêng** (không có mật khẩu quán; email báo thiết bị mới), **nhiều thiết bị cùng lúc**, **chi nhánh**, email chỉ để khôi phục. Các phần dưới đây nói về `shop_membership`, vai trò gắn tài khoản cá nhân, mật khẩu quán 6+ và máy quán R7 là **bản cũ, cần viết lại**: realm xác thực thêm “quán” (mã nhân viên + mật khẩu, phiên theo thiết bị, khôi phục qua email), RBAC theo (quán, chi nhánh, mã nhân viên). Việc tiếp theo ghi ở `ADR-0002`, mục “Việc tiếp theo”.
-
-> (Ghi chú cũ, trước khi viết lại ADR-0002) ADR-0002 đã **Accepted cho R1** (18-11-2026): một kiểu tài khoản, quyền theo quán, Admin là tài khoản riêng. ADR-0003 bám theo hướng đó; phần R7 nhiều Chủ quán/máy quán vẫn là hướng, nếu đổi thì phần quyền trong ADR này phải sửa theo.
+> **Viết lại 18-11-2026.** Bản trước dựa trên `shop_membership` (một kiểu tài khoản + vai trò) và mật khẩu quán dùng chung. ADR-0002 mới thay bằng: tài khoản quán do Admin cấp; **mỗi người đăng nhập bằng mã nhân viên + mật khẩu riêng** (không có mật khẩu quán); nhiều thiết bị cùng lúc; chi nhánh; email chỉ để khôi phục. ADR này viết lại realm xác thực, phiên và RBAC theo đó.
 
 ## Bối cảnh
 
@@ -15,9 +13,9 @@ GoWander có ba loại client với nhu cầu xác thực khác nhau:
 
 | Client | R1 | Cách dùng | Ràng buộc |
 |---|---|---|---|
-| Client Mobile (KMP) | Guest-first; tài khoản từ R1.5 | Bearer token | Token trong Keychain/Keystore; không lưu plan/saved trên server mặc định |
+| Client Mobile (KMP) | Guest-first; tài khoản khách từ R1.5; **cùng app có đăng nhập quán** | Bearer token (một realm cho khách, một realm cho quán) | Token trong Keychain/Keystore; không lưu plan/saved trên server mặc định |
 | Admin Web (React/Vite) | Có | Session cookie | RBAC, bắt buộc 2 lớp, chống CSRF, không token trong `localStorage` |
-| Partner Web (React/Vite) | R6 | Session cookie | Quyền theo từng quán; nhân viên dùng chung tài khoản với app |
+| Partner Web (React/Vite) | R6 | Session cookie | Đăng nhập bằng mã nhân viên; quyền theo (quán, chi nhánh, vai trò) |
 | Showcase Web (Next.js, static) | Có | Public | Không form thu PII ở R1; không cần đăng nhập |
 
 Các quyết định đã có:
@@ -27,7 +25,7 @@ Các quyết định đã có:
 - Lỗi có một dạng thống nhất, có `requestId` (`02-conventions.md`).
 - Ngoài vùng hỗ trợ phải trả `UNSUPPORTED`, không bịa tuyến (`02-scope.md`).
 - Guest-first, local-first, privacy by default (`03-principles.md` nguyên tắc 7).
-- Admin là tài khoản riêng, bắt buộc hai lớp; quyền quán theo vai trò (`ADR-0002`, `08-accounts-roles-partners.md`).
+- Admin là tài khoản riêng, bắt buộc hai lớp. Tài khoản quán do Admin cấp; mỗi người một mã nhân viên + mật khẩu riêng (`ADR-0002`, `08-accounts-roles-partners.md`).
 
 Chưa có quyết định cho: phiên dài bao lâu, token hay cookie, RBAC kiểm ở đâu, mã lỗi nào là ổn định, làm sao giữ OpenAPI và client khớp nhau. Nếu để mỗi client tự đoán, sẽ lặp lại lỗi cũ: app phụ thuộc schema OTP, lỗi mỗi nơi một kiểu, quyền chỉ ẩn ở UI.
 
@@ -47,14 +45,15 @@ Chưa có quyết định cho: phiên dài bao lâu, token hay cookie, RBAC ki�
 
 | Realm | Đối tượng | Cơ chế | Cookie/token | 2 lớp |
 |---|---|---|---|---|
-| `client` | Người dùng app (R1.5) | Bearer token | Token trong Keychain/Keystore | Không bắt buộc |
+| `client` | Khách dùng app (R1.5) | Bearer token | Token trong Keychain/Keystore | Không bắt buộc |
+| `partner` | Chủ quán/Quản lý/Nhân viên (R6) | App: bearer token theo thiết bị. Web: session cookie | Keychain/Keystore; `__Host-gw_partner` | Khuyến nghị cho Chủ quán; bắt buộc nếu có thu tiền (giai đoạn 3) |
 | `admin` | Admin/Editor GoWander | Session cookie | `__Host-gw_admin` | **Bắt buộc** |
-| `partner` | Chủ quán/Quản lý/Nhân viên (R6) | Session cookie | `__Host-gw_partner` | Không bắt buộc mặc định |
 
 Quy tắc:
 
-- **Không dùng chung cookie/token giữa các realm.** Cookie Admin không mở được endpoint Partner và ngược lại; token client không gọi được `/admin/*` hay `/partner/*`.
-- Admin là **tài khoản riêng**, không phải account client được gắn role. Partner dùng **cùng kiểu account** với client, quyền đến từ `shop_membership` (ADR-0002).
+- **Không dùng chung cookie/token giữa các realm.** Cookie Admin không mở được endpoint Partner và ngược lại; token `client` không gọi được `/admin/*` hay `/partner/*`.
+- Danh tính realm `partner` là **`staff`** (một người trong quán, định danh bằng mã nhân viên), **không** phải `account` cá nhân được gắn vai trò. Một người vừa là khách vừa là nhân viên có hai danh tính độc lập và hai token riêng.
+- Admin là tài khoản riêng. Admin không đăng nhập vào realm `partner`; Admin can thiệp tài khoản quán qua `/admin/partners/*` và mọi thao tác được ghi nhật ký.
 - Không lưu token/session trong `localStorage` hoặc `sessionStorage`. Web dùng cookie `HttpOnly`; mobile dùng Keychain/Keystore.
 - Mọi endpoint ghi rõ realm và quyền cần có trong spec (`security`, mô tả operation).
 
@@ -77,12 +76,18 @@ Quy tắc:
 - Sai mật khẩu 5 lần liên tiếp → khoá tạm 15 phút; sai 2FA 5 lần → khoá, chỉ Owner mở. *(Đề xuất kế thừa ADR-039/08; chờ chốt.)*
 - Cookie CSRF: token double-submit trong cookie không `HttpOnly` riêng (`gw_csrf`) + header `X-CSRF-Token`; kiểm cả `Origin`/`Referer` cho request ghi.
 
-#### 3.3 Partner Web
+#### 3.3 Quán (app và Partner web)
 
-- Session cookie `__Host-gw_partner`: cùng thuộc tính bảo vệ như Admin.
-- Idle timeout **8 giờ**, absolute timeout **7 ngày**. *(Đề xuất; chờ chốt. Nhân viên giữa ca không muốn đăng nhập lại liên tục.)*
-- Không bắt buộc 2 lớp mặc định; Chủ quán có thể bật, và GoWander có thể bắt buộc khi có thu cọc hoặc đối soát tiền. **Khuyến nghị bật 2FA cho Chủ quán** vì mật khẩu thành viên quán chỉ tối thiểu 6 ký tự/6 số (ADR-0002).
-- Mọi request đến `/partner/shops/{shopId}/...` phải kiểm `shop_membership` của account đang đăng nhập; không tin `shopId` do client gửi.
+- **Danh tính:** `staff` đăng nhập bằng **mã nhân viên** (ví dụ `LL-NV007`, đã chứa mã quán) + **mật khẩu riêng**. Không có mật khẩu quán, không đăng nhập bằng email (ADR-0002 mục 3).
+- **Phiên theo thiết bị:** mỗi lần đăng nhập tạo một `device_session`. Token là chuỗi ngẫu nhiên 256-bit, opaque, server chỉ lưu SHA-256. App gửi `Authorization: Bearer`; web dùng cookie `__Host-gw_partner` (cùng thuộc tính bảo vệ như Admin). Một nhân viên có thể có nhiều phiên cùng lúc.
+- Idle timeout **8 giờ**, absolute **7 ngày**. *(Đề xuất; chờ chốt. Nhân viên giữa ca không muốn đăng nhập lại liên tục.)*
+- **“Đổi người đứng ca”** thu hồi phiên hiện tại rồi mở lại ô mã nhân viên + mật khẩu.
+- **Chủ quán quản lý thiết bị:** xem danh sách phiên (tên máy, lần dùng cuối, chi nhánh), thu hồi từng phiên hoặc tất cả. Đổi/đặt lại mật khẩu, khoá hoặc xoá một `staff` thu hồi **mọi phiên của `staff` đó**.
+- **Thiết bị mới:** lần đầu một `staff` đăng nhập trên `device_id` chưa từng thấy, hệ thống ghi `outbox_event` gửi email báo Chủ quán. Nếu quán bật `require_device_approval` (tắt mặc định), phiên ở trạng thái `pending_approval` và chỉ gọi được endpoint xem trạng thái cho đến khi Chủ quán duyệt.
+- **Khoá:** 5 lần sai → khoá 15 phút, tính theo `staff` và theo thiết bị/IP; tự mở, **không khoá vĩnh viễn** (tránh kẻ xấu cố tình khoá quán). Nhiều lần thất bại thì gửi email báo.
+- **2 lớp:** không bắt buộc mặc định; khuyến nghị bật cho Chủ quán vì mật khẩu nhân viên chỉ tối thiểu 6 ký tự (mục 4). GoWander có thể bắt buộc khi có thu tiền.
+- Mọi request `/partner/shops/{shopId}/...` lấy quán, chi nhánh và vai trò từ phiên và DB, **không tin `shopId`/`branchId` do client gửi** (xem mục 5).
+- **Ghi đồng thời:** ghi đơn/thực đơn gửi kèm `version` (hoặc `If-Match`); sai phiên bản → `409 CONFLICT`, client tải lại (ADR-0002 mục 5).
 
 #### 3.4 Quy tắc chung cho cookie
 
@@ -96,8 +101,11 @@ Quy tắc:
 
 - Băm mật khẩu bằng **Argon2id** (`golang.org/x/crypto/argon2`), tham số khởi điểm OWASP: 19 MiB, 2 vòng, 1 luồng, muối 16 byte; tham số lưu kèm hash để nâng cấp dần. *(Chờ chốt; không dùng bcrypt vì giới hạn 72 byte.)*
 - Mật khẩu client: 10–128 ký tự, có ít nhất một chữ và một số; không trùng 3 mật khẩu gần nhất (lưu hash lịch sử). Admin: tối thiểu 12 ký tự. *(Đề xuất; chờ chốt.)*
-- **Thành viên quán (Owner/Manager/Staff):** 6–128 ký tự; cho phép **6 chữ số**; chặn mật khẩu phổ biến (`123456`, `000000`, `111111`, `password`…). Đây là ngoại lệ có chủ đích theo ADR-0002; bù bằng khoá sau 5 lần sai, rate limit, audit và khuyến nghị 2FA cho Chủ quán. Mật khẩu tạm do Quản lý/Chủ quán cấp: dùng một lần, hết hạn 24 giờ, bắt đổi ngay, không hiện lại, không xem mật khẩu cũ.
-- Mật khẩu tạm không gửi qua email/SMS mặc định; người cấp chuyển trực tiếp cho nhân viên.
+- **Nhân viên quán (Chủ quán/Quản lý/Nhân viên):** 6–128 ký tự; cho phép **6 chữ số**; chặn mật khẩu phổ biến (`123456`, `000000`, `111111`, `password`…). Ngoại lệ có chủ đích theo ADR-0002 mục 6; bù bằng khoá 15 phút, rate limit, email báo, nhật ký theo mã nhân viên và khuyến nghị 2FA cho Chủ quán.
+- **Đặt mật khẩu lần đầu:** hệ thống gửi **liên kết dùng một lần (hạn 24 giờ)** tới email đăng ký; không bao giờ gửi mật khẩu dạng chữ.
+- **Quên mật khẩu Chủ quán:** nhập mã Chủ quán → liên kết đặt lại một lần (hạn **30 phút**) tới `recovery_email`; đặt xong thì thu hồi mọi phiên và gửi email báo.
+- **Quên mật khẩu Quản lý/Nhân viên:** người có quyền (Chủ quán; Quản lý với Nhân viên chi nhánh mình) bấm “Cấp lại” → **mật khẩu tạm một lần**, hạn 24 giờ, bắt đổi ngay, chỉ hiện đúng một lần cho người cấp, không xem được mật khẩu cũ. Không gửi mật khẩu tạm qua email/SMS; người cấp chuyển trực tiếp.
+- **Đổi `recovery_email`:** xác nhận ở email cũ **và** Admin duyệt (đối chiếu giấy tờ); gửi email báo cả hai địa chỉ.
 - Không tiết lộ tài khoản có tồn tại hay không: login sai, quên mật khẩu, đăng ký trùng đều trả thông báo trung tính; vẫn băm thử một lần khi account không tồn tại để thời gian phản hồi tương đương.
 - Mã xác minh email/khôi phục: 6 số, hết hạn **10 phút**, tối đa **5 lần gửi/giờ/tài khoản**, lưu dạng băm, dùng một lần. *(Đề xuất; chờ chốt.)*
 - Đăng nhập Google (R1.5) và Apple (trước App Store, nếu có Google) là **identity provider**, không phải realm riêng: sau khi xác minh, cấp cùng token client. Chỉ liên kết account khi email đã được xác minh; không tự động gộp theo email chưa xác minh.
@@ -111,42 +119,45 @@ Quy tắc:
 | Realm | Vai trò | Phạm vi |
 |---|---|---|
 | Client | `client` (ngầm định) | Dữ liệu của chính mình |
-| Partner | `owner`, `manager`, `staff` | Theo `shop_id` trong `shop_membership` |
+| Partner | `owner` (mã `CQ`), `manager` (`QL`), `staff` (`NV`) | `owner`: mọi chi nhánh của tài khoản quán. `manager`/`staff`: chi nhánh được gán (`branch_id`) |
 | Admin | `owner`, `ops`, `editor`, `moderator`, `accountant`, `partner_support` | Toàn hệ thống hoặc theo quyền được cấp |
 
-- Một account có thể có nhiều vai trò ở nhiều quán; **R1 mỗi quán đúng một** `owner` đang hoạt động; **R7 có thể nhiều owner**, ít nhất một, theo ADR-0002.
-- Admin không tự động có quyền Partner; Partner không tự động có quyền Admin.
-- Danh sách quyền Admin lấy từ `08-accounts-roles-partners.md`; tên quyền kỹ thuật dạng `resource:action` (ví dụ `place:write`, `story:publish`, `submission:review`, `shop:payout:read`, `admin:user:manage`, `backup:restore`).
+- **Quyền suy từ `role` hiện tại**, không suy từ chữ trong mã nhân viên (mã không đổi khi đổi vai trò).
+- Quyền Chủ quán chỉ có khi vào bằng mã `CQ` + mật khẩu của Chủ quán; mã `NV`/`QL` không bao giờ mở được thao tác Chủ quán.
+- Quản lý **không** tạo, sửa hay xoá được Chủ quán hoặc Quản lý khác (chống leo quyền). Luôn còn ít nhất một Chủ quán `active` trong mỗi tài khoản quán; service kiểm trong cùng transaction.
+- **Admin toàn quyền** với mọi tài khoản quán, nhân viên và nhật ký, qua realm `admin` và có ghi nhật ký. Admin không tự động có quyền realm `partner` và ngược lại.
+- Tên quyền kỹ thuật dạng `resource:action` (ví dụ `booking:confirm`, `menu:write`, `staff:manage`, `device:revoke`, `place:write`, `story:publish`, `submission:review`, `backup:restore`).
 
 #### 5.2 Cách kiểm
 
-- **Deny by default.** Route middleware chỉ kiểm realm; service kiểm quyền cụ thể và phạm vi đối tượng.
-- Kiểm quyền theo đối tượng, không chỉ theo route: ví dụ `PATCH /partner/shops/{shopId}/menu/{itemId}` phải kiểm membership của `shopId`, item thuộc `shopId`, và role được sửa menu.
-- Không tin `role`, `shopId`, `accountId` do client gửi; lấy từ session/token và DB.
-- Mọi thao tác ghi của Admin/Partner ghi audit trong cùng transaction (xem mục 9).
-- Có test cho **đường từ chối**: thiếu token, sai realm, thiếu role, sai `shopId`, đối tượng không tồn tại, role bị khoá.
+- **Deny by default.** Middleware chỉ xác định realm và phiên; **một `Authorizer` duy nhất** (`Can(principal, action, resource)`) quyết định quyền, nhận resource đã nạp từ DB (có `shop_account_id`, `branch_id`, `role` của người bị tác động). Không rải `if role == ...` trong handler.
+- Kiểm theo đối tượng, không chỉ theo route: `PATCH /partner/shops/{shopId}/menu/{itemId}` phải kiểm phiên thuộc `shopId`, item thuộc `shopId`, chi nhánh trong phạm vi, vai trò được sửa menu.
+- Không tin `role`, `shopId`, `branchId`, `staffId`, `accountId` do client gửi; lấy từ phiên và DB.
+- Mọi thao tác ghi của Admin/quán ghi audit **trong cùng transaction** với thay đổi (mục 9, mẫu Outbox ở mục 13).
+- Có test cho **đường từ chối**: thiếu token, sai realm, thiếu vai trò, sai `shopId`, sai chi nhánh, đối tượng không tồn tại, nhân viên bị khoá/xoá, phiên bị thu hồi, Quản lý cố cấp quyền cho Quản lý/Chủ quán.
 - UI chỉ ẩn/hiện; ẩn nút không phải bảo vệ.
 
 #### 5.3 Ma trận quyền tối thiểu
 
-| Hành động | Client | Staff | Manager | Owner | Admin |
+| Hành động | Client | Nhân viên | Quản lý | Chủ quán | Admin |
 |---|:-:|:-:|:-:|:-:|:-:|
 | Xem place/story/route công khai | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Lưu plan/saved (local) | ✓ | ✓ | ✓ | ✓ | — |
-| Đề xuất địa điểm (R1.5) | ✓ | ✓ | ✓ | ✓ | — |
-| Xem đơn hôm nay của quán | — | ✓ | ✓ | ✓ | ✓ |
+| Lưu plan/saved (local), đề xuất địa điểm (R1.5) | ✓ | — | — | — | — |
+| Xem đơn | — | chi nhánh mình | chi nhánh mình | mọi chi nhánh | ✓ |
+| Xác nhận, đổi giờ, từ chối, đã đến | — | chi nhánh mình | chi nhánh mình | mọi chi nhánh | ✓ |
 | Bật/tắt món, sửa giá nhanh | — | ✓ | ✓ | ✓ | — |
-| Sửa thực đơn/khung giờ/cọc | — | — | ✓ | ✓ | — |
-| Thêm/sửa Nhân viên; cấp lại mật khẩu Nhân viên; khoá/mở Nhân viên | — | — | ✓ | ✓ | — |
-| Cấp lại mật khẩu Quản lý/Chủ quán | — | — | — | ✓ | — |
-| Đối soát/tiền | — | — | — | ✓ | ✓ (kế toán) |
-| Mời/gỡ Quản lý; thêm/gỡ Chủ quán (R7, Admin xác nhận) | — | — | — | ✓ | ✓ |
-| Xoá Nhân viên | — | — | — | ✓ | — |
-| Xem nhật ký thao tác quán | — | — | ✓ | ✓ | ✓ |
-| Duyệt đề xuất/đối tác | — | — | — | — | ✓ |
+| Sửa thực đơn, khung giờ đặt trước, hồ sơ chi nhánh | — | — | chi nhánh mình | ✓ | ✓ |
+| Thêm/sửa Nhân viên; cấp lại mật khẩu; khoá/mở khoá | — | — | Nhân viên chi nhánh mình | ✓ | ✓ |
+| Xoá Nhân viên | — | — | — | ✓ | ✓ |
+| Tạo/sửa Quản lý, Chủ quán | — | — | — | ✓ | ✓ |
+| Chi nhánh, thiết bị (xem, đăng xuất), cấu hình, báo cáo toàn quán | — | — | — | ✓ | ✓ |
+| Nhật ký thao tác theo người | — | — | chi nhánh mình | ✓ | ✓ |
+| Đổi `recovery_email` | — | — | — | ✓ + Admin duyệt | ✓ |
+| Đối soát/tiền (giai đoạn 3) | — | — | — | ✓ | ✓ (kế toán) |
+| Duyệt hồ sơ, cấp tài khoản quán, duyệt đề xuất | — | — | — | — | ✓ |
 | Sao lưu/khôi phục | — | — | — | — | ✓ (Owner/ops) |
 
-> Bảng này là mức tối thiểu; chi tiết cuối cùng ở `03-data-model.md` và `04-api-contract.md` khi viết. Các ô “✓” vẫn phải kiểm ở server.
+> Mức tối thiểu; chi tiết cuối cùng ở `03-data-model.md` và `04-api-contract.md` khi viết. Mọi ô “✓” vẫn phải kiểm ở server.
 
 ### 6. Quy ước hợp đồng
 
@@ -222,6 +233,7 @@ Mọi lỗi:
 | Nhóm | Giới hạn đề xuất | Ghi chú |
 |---|---|---|
 | Đăng nhập | 5 lần/15 phút/tài khoản; 20 lần/giờ/IP | Trả `429`, không tiết lộ tài khoản |
+| Đăng nhập quán | 5 lần/15 phút/mã nhân viên và 5 lần/15 phút/thiết bị-IP | Khoá tự mở, email báo; không khoá vĩnh viễn |
 | Quên mật khẩu | 5 lần/giờ/tài khoản; 20 lần/giờ/IP | Mã 10 phút |
 | Đăng ký | 5 lần/giờ/IP | Chống spam |
 | Đề xuất địa điểm | 3/ngày/account (đã chốt ở scope) | R1.5 |
@@ -257,11 +269,27 @@ Chỉ các endpoint cần cho R1; phần còn lại là seam, chưa mở:
 | Auth client (R1.5) | `/api/v1/auth/register`, `/login`, `/google`, `/logout`, `/verify-email`, `/password/forgot`, `/password/reset` | Public |
 | Me (R1.5) | `GET/DELETE /api/v1/me`, `GET /api/v1/me/submissions`, `POST /api/v1/me/submissions`, `POST /api/v1/me/submissions/{id}/withdraw` | Client |
 | Admin | `/api/v1/admin/auth/*`, `/api/v1/admin/places`, `/stories`, `/media`, `/feedback`, `/submissions`, `/partners`, `/users`, `/audit` | Admin |
-| Partner (R6) | `/api/v1/partner/auth/*`, `/api/v1/partner/shops/{shopId}/...`, `/api/v1/partner/shops/{shopId}/staff`, `POST /api/v1/partner/shops/{shopId}/staff/{memberId}/reset-password` | Partner |
+| Quán (R6) | `POST /api/v1/partner/auth/login` (mã nhân viên + mật khẩu), `/logout`, `/switch-staff`, `/password/forgot`, `/password/set`; `/api/v1/partner/shops/{shopId}/branches`, `/staff`, `/devices`, `/bookings`, `/menu`; `POST .../staff/{staffId}/reset-password`; `DELETE .../devices/{deviceId}` | Partner |
 
 - `GET /api/v1/app/config` không trả bí mật; chỉ trả URL tile/style, feature flag công khai, phiên bản tối thiểu, locale mặc định.
 - Feedback guest có thể gửi không cần account; nếu có account thì lấy email/tên từ account, không tin client.
 - Các endpoint Admin/Partner chỉ được thêm khi phase tương ứng mở; không tạo endpoint rỗng “chuẩn bị trước”.
+
+### 13. Mẫu thiết kế áp dụng
+
+Mỗi mẫu chỉ dùng khi có vấn đề thật ở cột “Vấn đề”; không thêm lớp trừu tượng “để sau này”.
+
+| Vấn đề | Mẫu | Cách áp dụng |
+|---|---|---|
+| Ba realm, mỗi realm xác minh khác nhau | **Strategy** (`CredentialVerifier` theo realm) | Mỗi realm một bộ xác minh (khách: email/SĐT; quán: mã nhân viên; Admin: email + 2 lớp) cùng một interface; không viết một hàm login có `switch` dài |
+| Xử lý request nhiều bước | **Chain of Responsibility** (middleware) | `request-id → realm → phiên → rate limit → authorize`; mỗi bước làm một việc, thứ tự cố định |
+| Quyền rải rác | **Policy** (một `Authorizer`) | Mục 5.2; thêm quyền = thêm một dòng policy và một test từ chối |
+| Ghi dữ liệu và gửi email/thông báo | **Transactional Outbox** | Thay đổi nghiệp vụ, audit và `outbox_event` ghi **cùng một transaction**; worker gửi email, thông báo, đếm “món đặt nhiều”. Không gọi SMTP trong request, không ghi kép |
+| Hai thiết bị sửa một đơn | **Optimistic locking** | Cột `version`; `UPDATE ... WHERE id = :id AND version = :v`; sai → `409` |
+| Retry do mạng | **Idempotency-Key** | Đã có ở mục 6 |
+| Nhà cung cấp ngoài (Vietmap, OTP, email) | **Port/Adapter (anti-corruption layer)** | Domain chỉ biết interface của mình; schema nhà cung cấp không rò vào domain; thay nhà cung cấp chỉ đổi adapter |
+| Trạng thái đơn, nhân viên, phiên thiết bị | **State machine tường minh** | Bảng chuyển hợp lệ trong code và test; chuyển sai trả `CONFLICT` |
+| Chống dò mật khẩu, lạm dụng | **Token bucket / sliding window** | Cấu hình có tên (mục 10), không hard-code trong handler |
 
 ## Lý do
 
@@ -269,7 +297,7 @@ Chỉ các endpoint cần cho R1; phần còn lại là seam, chưa mở:
 2. **Tách realm là yêu cầu bảo mật.** Admin có quyền cao; dùng chung cookie/token với client/partner làm tăng blast radius. Cookie riêng + 2FA + step-up giảm rủi ro.
 3. **Opaque session thay JWT.** Cần thu hồi ngay khi đổi mật khẩu/xoá tài khoản; JWT stateless khó thu hồi và dễ bị dùng sai. DB lookup mỗi request chấp nhận được ở quy mô pilot; có thể cache sau.
 4. **Session cookie cho web, bearer cho mobile.** Web cần chống XSS bằng `HttpOnly`; mobile không có cookie jar ổn định và cần Keychain/Keystore.
-5. **RBAC theo đối tượng.** Quyền quán là quan hệ (account, shop, role); kiểm ở route là không đủ. Deny by default + audit là mức tối thiểu cho dữ liệu tiền và giấy tờ.
+5. **RBAC theo đối tượng.** Quyền quán gắn (tài khoản quán, chi nhánh, vai trò) của người đăng nhập; kiểm ở route là không đủ. Một `Authorizer` deny-by-default + audit là mức tối thiểu cho dữ liệu tiền, giấy tờ và dữ liệu nhân viên.
 6. **Lỗi có mã ổn định.** Client hiển thị đúng “ngoài vùng phủ” khác “không có tuyến” khác “hết giờ chạy”; không đoán qua HTTP status.
 7. **Idempotency cho tiền và nội dung.** Feedback/submission/booking có thể retry do mạng; thiếu idempotency tạo bản ghi trùng.
 
@@ -292,7 +320,7 @@ Chỉ các endpoint cần cho R1; phần còn lại là seam, chưa mở:
 
 - Client biết chính xác endpoint, mã lỗi, kiểu dữ liệu; giảm công đoán và lỗi tích hợp.
 - Admin/Partner có mô hình phiên riêng, 2FA, step-up, audit; phù hợp dữ liệu tiền và giấy tờ.
-- RBAC theo quán mở đường cho R6/R7 mà không phải đổi kiến trúc.
+- RBAC theo (quán, chi nhánh, vai trò) mở đường cho R6 và giai đoạn 3 mà không phải đổi kiến trúc.
 - OpenAPI + contract test tạo nền cho client sinh tự động và mock.
 
 ### Tiêu cực / chi phí
@@ -302,13 +330,14 @@ Chỉ các endpoint cần cho R1; phần còn lại là seam, chưa mở:
 - OpenAPI + sinh client + contract test là thêm CI và kỷ luật; đội nhỏ phải duy trì.
 - Mobile phải xử lý token hết hạn/ bị thu hồi, đăng nhập lại, nhiều thiết bị.
 - 2FA Admin làm chậm thao tác khẩn cấp; cần quy trình mã dự phòng và khôi phục.
-- Mật khẩu thành viên quán tối thiểu 6 ký tự/6 số yếu hơn khách/Admin; phải bù bằng lockout/rate limit/audit.
+- Mật khẩu nhân viên quán tối thiểu 6 ký tự/6 số yếu hơn khách/Admin; phải bù bằng khoá 15 phút, rate limit, email báo thiết bị mới, audit theo mã nhân viên.
 - Các con số timeout/rate limit là đề xuất, cần đo và chỉnh.
 
 ### Rủi ro
 
-- ADR-0002 đã Accepted cho R1 nhưng R7 nhiều Chủ quán/máy quán còn là hướng; nếu đổi, ma trận quyền và bảng `shop_membership` phải sửa.
-- Mật khẩu 6 số dễ đoán nếu lockout/rate limit bị vô hiệu; cần test và giám sát.
+- Mã nhân viên có quy luật nên tên đăng nhập đoán được; an toàn dựa vào mật khẩu riêng, khoá và rate limit. Nếu các lớp này bị vô hiệu thì mật khẩu 6 số rất dễ đoán; cần test và giám sát.
+- Email khôi phục là điểm tấn công lớn nhất; bắt buộc Admin duyệt khi đổi email (ADR-0002 mục 6).
+- Dữ liệu nhân viên (họ tên, SĐT, ca làm) chưa có DPIA hay luật sư rà.
 - Google/Apple sign-in có thể trễ R1.5; không được chặn đăng nhập email/password.
 - 2FA TOTP có thể mất thiết bị; quy trình recovery phải được viết và thử trước khi mở Admin ra Internet.
 - Rate limit theo IP có thể chặn nhầm người dùng sau NAT; cần theo dõi và có ngoại lệ.
@@ -317,19 +346,19 @@ Chỉ các endpoint cần cho R1; phần còn lại là seam, chưa mở:
 
 ## Việc tiếp theo
 
-- [ ] Chủ dự án chốt các con số đề xuất: thời hạn phiên, 2FA (TOTP/passkey), thời gian step-up, rate limit.
-- [x] ADR-0002 đã chốt hướng quyền quán (Admin cấp Chủ quán; Chủ quán mời; R1 một/R7 nhiều).
-- [ ] Viết `../02-architecture/04-api-contract.md` với đặc tả chi tiết và kế hoạch OpenAPI.
-- [ ] Viết `api/openapi.yaml` v0 cho các endpoint R1; lint + mock.
-- [ ] Viết `../02-architecture/03-data-model.md` cho bảng session/account/RBAC (khớp ADR-0004).
-- [ ] Viết `../02-architecture/05-security-privacy.md` cho threat model, CSRF/XSS, 2FA, retention.
+- [ ] Chủ dự án chốt các con số đề xuất: thời hạn phiên (khách, quán, Admin), 2FA (TOTP/passkey), thời gian step-up, rate limit.
+- [x] ADR-0002 viết lại 18-11-2026: tài khoản quán do Admin cấp, mã nhân viên + mật khẩu riêng, nhiều thiết bị, chi nhánh.
+- [ ] Viết `../02-architecture/04-api-contract.md` và `api/openapi.yaml` v0 (R1); thêm nhóm `/partner/auth/*` khi mở R6.
+- [ ] Viết `../02-architecture/03-data-model.md` khớp ADR-0004 (đã viết lại: `shop_account`, `branch`, `staff`, `device_session`).
+- [ ] Viết `../02-architecture/05-security-privacy.md`: threat model, CSRF/XSS, 2FA, retention, dữ liệu nhân viên.
 - [ ] Chọn thư viện Argon2id/TOTP và viết test vector trước khi code auth.
-- [ ] Quyết định có dùng passkey/WebAuthn ở R1 hay R6.
+- [ ] Test: khoá 15 phút, thiết bị mới gửi email, thu hồi phiên khi đổi mật khẩu/xoá nhân viên, Quản lý không cấp được cho Quản lý/Chủ quán, mã `NV` không vào được thao tác Chủ quán.
+- [ ] Quyết định passkey/WebAuthn ở R1 hay R6.
 
 ## Tham khảo
 
 - `ADR-0001-web-stack.md` — cookie httpOnly + CSRF, không token trong localStorage.
-- `ADR-0002-account-roles.md` — một kiểu account, quyền theo quán, Admin riêng + 2FA.
+- `ADR-0002-account-roles.md` — ba loại đăng nhập; tài khoản quán do Admin cấp; mã nhân viên + mật khẩu riêng; Admin riêng + 2FA.
 - `../01-product/08-accounts-roles-partners.md` — luồng đăng nhập, quên mật khẩu, vai trò, hồ sơ đối tác.
 - `../04-development/02-conventions.md` — dạng lỗi, quy ước backend/web/mobile.
 - Repo cũ `../GoWander`: `ADR-022` (đăng nhập/ngôn ngữ), `ADR-027` (API Go, mã lỗi), `ADR-039` (Admin + Argon2id), `ADR-040` (token app 60 ngày, không JWT). Chỉ tham khảo; quyết định v2 là quyết định mới.
