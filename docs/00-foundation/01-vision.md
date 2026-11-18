@@ -9,14 +9,14 @@
 
 ## TL;DR
 
-GoWander là **nền tảng khám phá và di chuyển thông minh**: pilot sâu tại TP.HCM, bản đồ/discover phủ Việt Nam, không chỉ là app tìm đường.
+GoWander là **nền tảng khám phá và di chuyển thông minh**: pilot sâu tại TP.HCM (tìm tuyến + Discover/Guide), bản đồ và tìm kiếm phủ Việt Nam, không chỉ là app tìm đường.
 
 - **2 app mobile mục tiêu:** GoWander Client (du khách) và GoWander Business (Partner + Admin).
 - **3 khu vực web:** Client Web, Partner Web, Admin Web.
 - **1 backend dùng chung:** modular monolith.
 - **Hero feature:** **Wander Mode** — lập hành trình theo thời gian, sở thích, điểm xuất phát; có Plan B và giải thích gợi ý.
 - **Bản release đầu tiên (R1):** Client Mobile + Admin Web + **Showcase Web** (marketing), map, Discover/Guide, đi bộ/bus/metro/xe đạp **tại TP.HCM**, plan cá nhân cơ bản, song ngữ.
-- **Địa lý:** pilot sâu TP.HCM (metro + bus); map/discover toàn quốc; bus/metro vùng khác chỉ khi đủ dữ liệu.
+- **Địa lý:** pilot sâu TP.HCM (tìm tuyến + Discover/Guide); map/search toàn quốc; tìm tuyến vùng khác chỉ khi có graph và dữ liệu riêng (sau R1).
 
 Điểm khác biệt cốt lõi: GoWander không chỉ giúp bạn **tìm đường tới một địa điểm**, mà còn giúp bạn **khám phá nơi đáng đến, xây dựng chuyến đi, điều chỉnh kế hoạch, lưu giữ kỷ niệm và chia sẻ trải nghiệm**.
 
@@ -41,7 +41,7 @@ GoWander là một hệ sinh thái gồm:
 3. **Go Backend** — modular monolith: Identity · Mobility · Discover · Journey · AI · Community · Ads · Affiliate · Booking.
 4. **Data & Integrations** — PostgreSQL/PostGIS, OTP, Photon, MapLibre, media storage, đối tác ngoài.
 
-R1 chỉ cần **Client Mobile + Admin Web**; geo: TP.HCM là pilot sâu, map/discover toàn quốc. Các phần còn lại có vị trí trong kiến trúc nhưng không chặn release đầu tiên.
+R1 chỉ cần **Client Mobile + Admin Web** (cùng Showcase Web rút gọn); geo: TP.HCM là pilot sâu, map/search toàn quốc. Các phần còn lại có vị trí trong kiến trúc nhưng không chặn release đầu tiên.
 
 ## Vòng lặp sản phẩm
 
@@ -87,7 +87,7 @@ Ads, Affiliate và Booking tạo doanh thu **xung quanh** vòng lặp này, khô
 | POI + review đại trà | Nội dung địa phương tuyển chọn, gắn với tuyến |
 | Một tuyến A→B | Plan nhiều điểm, có giờ, thứ tự, Plan B |
 | Dữ liệu hiển thị “như thật” | Ghi rõ `ASSUMED` / ước tính / chưa chính thức |
-| Toàn cầu, hời hợt | TP.HCM sâu trước; map/discover toàn quốc; hiểu hẻm, bus, metro, mùa mưa |
+| Toàn cầu, hời hợt | TP.HCM sâu trước; map/search toàn quốc; hiểu hẻm, bus, metro, mùa mưa |
 | Tài khoản + quảng cáo + tracking | Guest-first, local-first, tối thiểu dữ liệu |
 
 Không cạnh tranh với Google ở: độ phủ bản đồ, realtime toàn cầu, Street View, review số lượng lớn, traffic toàn cầu. GoWander thắng ở **một job hẹp: lên và sống một ngày ở Sài Gòn**.
@@ -107,7 +107,7 @@ Các số này là **giả thuyết**, sẽ hiệu chỉnh sau usability test.
 
 ## Ưu tiên theo release
 
-- **R1 — Pilot Foundation:** map, Discover/Guide toàn quốc; route đi bộ/bus/metro/xe đạp tại TP.HCM; plan cơ bản; Admin Web; Showcase Web.
+- **R1 — Pilot Foundation:** map/search toàn quốc; Discover/Guide + route đi bộ/bus/metro/xe đạp tại TP.HCM; plan cơ bản; lưu địa điểm; Admin Web; Showcase Web rút gọn.
 - **R2 — Wander Mode:** hero feature; lập hành trình, Plan B, giải thích, weather-aware.
 - **R3 — Retention:** Journey Memory, Storybook.
 - **R4 — Community Beta:** post, follow, comment, moderation.
@@ -122,7 +122,7 @@ Chi tiết: [`02-scope.md`](./02-scope.md).
 
 - Community, AI, Ads, Affiliate, Booking.
 - Partner Web, Business Mobile, Client Web app (Showcase marketing có trong R1).
-- Routing bus/metro toàn quốc; metro Hà Nội/thành phố khác; bus liên tỉnh.
+- Tìm tuyến ngoài TP.HCM (mọi mode); metro Hà Nội/thành phố khác; bus liên tỉnh.
 - Ô tô, xe máy, phà.
 - Realtime GTFS/GTFS-RT.
 - Review/rating cộng đồng đầy đủ.
@@ -132,7 +132,7 @@ Các phần này **có chỗ trong kiến trúc** (module/role/feature flag), nh
 ## Câu hỏi mở
 
 - Mở rộng bus/metro tỉnh/thành nào trước: Hà Nội, Đà Nẵng, hay theo đối tác?
-- Ngôn ngữ thứ ba (Trung/Hàn/Nhật) có cần cho pilot không?
+- Ngôn ngữ thứ ba (Trung/Hàn/Nhật): đã hoãn sau R1 (18-11-2026); chọn ngôn ngữ nào sau pilot?
 - AI provider/chi phí và mức kiểm chứng nào là đủ cho R5?
 - Mô hình doanh thu nào được thử trong R6 (affiliate, quảng cáo, gói trả phí)?
 - Ai chịu trách nhiệm nội dung/ảnh và kiểm duyệt cộng đồng?

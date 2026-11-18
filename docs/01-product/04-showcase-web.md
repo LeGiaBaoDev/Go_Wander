@@ -1,208 +1,177 @@
 # 04 — Showcase Web
 
 - **Trạng thái:** Draft
-- **Ngày:** 18-11-2026
+- **Ngày:** 18-11-2026 (rút gọn R1 cùng ngày)
 - **Chủ sở hữu:** chủ dự án
 - **Liên quan:** `../00-foundation/01-vision.md`, `../00-foundation/02-scope.md`, `../03-decisions/ADR-0001-web-stack.md`
 
 ## TL;DR
 
-GoWander cần một **trang web showcase** công khai, không chỉ app. Trang này giới thiệu dự án, dịch vụ, giá, chính sách, cách tải app và cách liên hệ/trở thành đối tác.
+GoWander cần một **trang web showcase** công khai, nhưng R1 chỉ cần đủ để: giải thích GoWander là gì, tải app, liên hệ, và công bố chính sách bắt buộc.
 
-Đề xuất: **Showcase Web là phần marketing của Client Web**, dùng **Next.js + TypeScript** (ADR-0001), tách route group `(marketing)` khỏi app `(app)`.
+Đề xuất: **Showcase Web là phần marketing của Client Web**, dùng **Next.js + TypeScript** (ADR-0001), route group `(marketing)` tách khỏi `(app)`, **build tĩnh (static export)**.
 
-- **R1:** Home, About, Services, Pricing, Partners (form), Download, FAQ, Contact + 5 trang policy.
-- **Sau R1:** blog/updates, partner directory, case study, status page, CMS.
-- **Đa ngôn ngữ VI/EN/ZH**, SEO/SSG, accessibility, không dùng số liệu/testimonial giả.
-- **Thiết kế:** light/airy, **Sexy Blue** + orange accent nhỏ, có 3D hero; xem `05-brand-ui-direction.md`.
+- **R1 (6 trang):** Home, Download, Contact, Privacy, Terms, Map/Data.
+- **Sau R1:** About, Services, Pricing, Partners (form), FAQ, Cookies, Content policy, blog, partner directory, status page, CMS.
+- **Ngôn ngữ R1: VI + EN.** ZH hoãn sau R1.
+- **Không** form thu PII, không giá, không dịch vụ trả phí, không số liệu/testimonial giả.
+- **Thiết kế:** light/airy, **Sexy Blue**, 3D hero tĩnh; xem `05-brand-ui-direction.md`.
 
-## Quyết định từ chủ dự án (18-11-2026)
+## Quyết định từ chủ dự án
 
 | Vấn đề | Quyết định |
 |---|---|
-| Tên miền | **Chưa có**; chọn sau. Tạm dùng domain/subdomain khi có; không chặn docs |
-| Dịch vụ/giá | **Chưa chốt**; R1 không bán/không thu tiền. Pricing ghi “Beta / Liên hệ”, không bịa số |
+| Tên miền | **Chưa có**; chọn sau. Không chặn docs |
+| Dịch vụ/giá | **Chưa chốt**; R1 không bán, không thu tiền, **không có trang Pricing/Services** |
 | Người viết nội dung | **Chủ dự án** (founder) |
-| Ngôn ngữ | **VI + EN + ZH**; EN/VI là chính, ZH cho khách Trung |
-| Form partner | **Có trong R1**; chỉ thu quan tâm, chưa phải hợp đồng |
-| CMS | **MDX/JSON trong repo cho R1**; CMS sau khi có nhiều editor (xem dưới) |
-| Trang status | **Chưa làm R1**; giải thích ở dưới; làm khi có dịch vụ trả phí/SLA |
-| Pháp nhân/hợp đồng/hoá đơn | **Chưa có**; không checkout/không hoá đơn/không hợp đồng ràng buộc trong R1 |
+| Ngôn ngữ | **VI + EN** ở R1 (18-11-2026). ZH hoãn sau R1 |
+| Phạm vi trang R1 | **Rút gọn còn 6 trang** (18-11-2026) |
+| Form partner/liên hệ | **Không form ở R1**; Contact là địa chỉ email (không thu PII qua form, không cần endpoint/spam filter) |
+| CMS | **MDX/JSON trong repo cho R1**; CMS sau khi có nhiều editor |
+| Trang status | Chưa làm R1; làm khi có dịch vụ trả phí/SLA |
+| Pháp nhân/hợp đồng/hoá đơn | **Chưa có**; không checkout/hoá đơn/hợp đồng ràng buộc trong R1 |
+
+> **Phụ thuộc chặn:** Privacy và Terms phải nêu rõ bên chịu trách nhiệm xử lý dữ liệu và liên hệ. Khi chưa có pháp nhân/tên miền, hai trang này chỉ là bản nháp; không publish trước khi chủ dự án chốt bên chịu trách nhiệm.
 
 ## Mục tiêu
 
 | Mục tiêu | Cách đo |
 |---|---|
-| Giải thích GoWander là gì trong 30 giây | Tỉ lệ scroll/CTA; hỏi người thử |
-| Tạo niềm tin trước khi tải app | Tải app/đăng ký thử; liên hệ |
-| Giới thiệu dịch vụ + giá rõ ràng | Xem Pricing → Contact/Đăng ký partner |
-| Công bố chính sách minh bạch | Trang policy có ngày cập nhật, phiên bản |
-| Thu hút đối tác | Form partner/booking |
+| Giải thích GoWander là gì trong 30 giây | Hỏi người thử; tỉ lệ scroll/CTA |
+| Tạo niềm tin trước khi tải app | Lượt bấm Tải app |
+| Công bố chính sách minh bạch | Policy có ngày hiệu lực, phiên bản |
 
 ## Người đọc
 
 - Du khách/người dùng cuối: tải app, hiểu tính năng, đọc chính sách.
-- Đối tác: quán ăn, khách sạn, tour, dịch vụ; xem gói/giá/liên hệ.
-- Nhà đầu tư/báo chí: hiểu dự án, đội, giai đoạn, khác biệt.
-- Cơ quan/quản lý: chính sách, pháp lý, bản đồ, dữ liệu.
-- Ứng viên: văn hóa/đội ngũ (sau).
+- Cơ quan/quản lý, store reviewer: privacy, terms, map/data.
+- Đối tác, nhà đầu tư/báo chí: sau R1 (About/Partners).
 
 ## Sơ đồ trang
 
 | Route | Trang | R1 | Nội dung chính |
 |---|---|---|---|
-| `/` | Home | ✅ | Hero, vấn đề, giải pháp, tính năng, cách hoạt động, CTA |
-| `/about` | Về GoWander | ✅ | Sứ mệnh, đội, giai đoạn, nguyên tắc dữ liệu |
-| `/services` | Dịch vụ | ✅ | Dịch vụ cho người dùng/đối tác |
-| `/pricing` | Giá | ✅ | Gói, cách tính, VAT, dùng thử/huỷ |
-| `/partners` | Đối tác | ✅ | Chương trình partner, form đăng ký quan tâm |
+| `/` | Home | ✅ | Hero, vấn đề, giải pháp **chỉ gồm tính năng R1**, cách hoạt động, CTA |
 | `/download` | Tải app | ✅ | Android/iOS/TestFlight, yêu cầu |
-| `/faq` | FAQ | ✅ | Câu hỏi thường gặp |
-| `/contact` | Liên hệ | ✅ | Form, email, địa chỉ (nếu có) |
-| `/policies/privacy` | Quyền riêng tư | ✅ | Dữ liệu, vị trí, cookie, quyền |
+| `/contact` | Liên hệ | ✅ | Email liên hệ (không form) |
+| `/policies/privacy` | Quyền riêng tư | ✅ | Dữ liệu, vị trí, quyền, liên hệ; gồm phần cookie nếu có |
 | `/policies/terms` | Điều khoản | ✅ | Điều kiện dùng |
-| `/policies/cookies` | Cookie | ✅ | Loại cookie, mục đích, lựa chọn |
-| `/policies/refunds` | Hoàn tiền/huỷ | ⏳ | Khi có booking/dịch vụ trả phí |
-| `/policies/content` | Nội dung/ảnh | ✅ | License, credit, nội dung người dùng |
+| `/policies/map` | Bản đồ/dữ liệu | ✅ | Nguồn, `ASSUMED`/ước tính, chủ quyền, giấy phép/credit ảnh và nội dung, giới hạn |
+| `/about` | Về GoWander | ⏳ | Sứ mệnh, đội |
+| `/services`, `/pricing` | Dịch vụ, Giá | ⏳ | Khi có dịch vụ/giá/pháp nhân |
+| `/partners` | Đối tác (form) | ⏳ R6 | Khi có Partner Web/leads |
+| `/faq` | FAQ | ⏳ | Sau usability test |
+| `/policies/cookies`, `/policies/content` | Cookie, Nội dung | ⏳ | Khi có cookie không thiết yếu / nội dung người dùng (R1.5+) |
 | `/policies/community` | Cộng đồng | ⏳ R4 | Quy tắc post/comment |
-| `/policies/map` | Bản đồ/dữ liệu | ✅ | Nguồn, chủ quyền, độ chính xác |
-| `/policies/accessibility` | Tiếp cận | ⏳ | Cam kết và kênh phản hồi |
-| `/policies/security` | Bảo mật | ⏳ | Cách báo lỗi, phạm vi |
-| `/blog` | Cập nhật | ⏳ | Bài viết, changelog |
-| `/status` | Trạng thái | ❌ R1 | Health/incident công khai; làm khi có dịch vụ trả phí/SLA |
+| `/policies/refunds`, `/accessibility`, `/security` | Hoàn tiền, Tiếp cận, Bảo mật | ⏳ | Khi cần |
+| `/blog`, `/status` | Cập nhật, Trạng thái | ❌ R1 | Sau |
 
-## Home — bố cục đề xuất
+## Home — bố cục R1
 
-1. **Hero**: “Move Smart. Explore More.” + một câu định vị + CTA Tải app / Xem dịch vụ.
-2. **Vấn đề**: đi bus/metro ở TP.HCM khó; thông tin rải rác; mưa/nắng; ngôn ngữ.
-3. **Giải pháp**: Wander Mode, route, discover, plan, weather, Journey Memory.
-4. **Cách hoạt động**: 3–4 bước (`Discover → Wander Mode → Explore → Memory`).
-5. **Tính năng**: card ngắn, có screenshot thật (không mock nếu chưa có).
-6. **Dịch vụ**: 3 nhóm — người dùng, đối tác, doanh nghiệp.
-7. **Giá**: bảng tóm tắt + link `/pricing`.
-8. **Niềm tin**: dữ liệu ASSUMED, license, privacy, không bán dữ liệu.
-9. **Đối tác**: logo/quote có phép; nếu chưa có, bỏ trống — không bịa.
-10. **FAQ** + CTA cuối.
-11. **Footer**: chính sách, liên hệ, ngôn ngữ, mạng xã hội (nếu có).
+1. **Hero**: “Move Smart. Explore More.” + một câu định vị + CTA Tải app.
+2. **Vấn đề**: đi bus/metro ở TP.HCM khó; thông tin rải rác; ngôn ngữ.
+3. **Giải pháp (chỉ tính năng R1)**: bản đồ, tìm tuyến đi bộ/bus/metro/xe đạp tại TP.HCM, Discover/Guide, plan cá nhân, lưu địa điểm, VI/EN.
+4. **Cách hoạt động**: 3 bước (`Tìm → Chọn tuyến → Đi`), không nhắc Wander Mode/Journey Memory.
+5. **Tính năng**: card ngắn, screenshot thật (nếu chưa có, mock có nhãn “demo”).
+6. **Niềm tin**: dữ liệu `ASSUMED`/ước tính, license, privacy, không bán dữ liệu.
+7. **CTA cuối + Footer**: chính sách, liên hệ, ngôn ngữ.
 
-## Dịch vụ (catalog ban đầu)
-
-> Giá thực tế **chưa chốt**; bảng dưới là khung để chủ dự án điền. Không publish số khi chưa duyệt.
-
-| Dịch vụ | Đối tượng | Mô tả | Giá |
-|---|---|---|---|
-| **GoWander Free** | Người dùng | Map, route, discover, plan cơ bản | Miễn phí |
-| **Business Basic** | Đối tác | Hồ sơ địa điểm, thông tin, ảnh, link | TBD |
-| **Business Verified** | Đối tác | Xác minh, badge, ưu tiên hiển thị trong ràng buộc | TBD |
-| **Sponsored placement** | Đối tác | Vị trí quảng cáo có nhãn, tách ranking | TBD (CPM/CPC) |
-| **Affiliate** | Đối tác | Referral/commission theo chuyển đổi | TBD (%) |
-| **Booking referral** | Đối tác | Chuyển booking, đối soát | TBD |
-| **Content sponsorship** | Đối tác | Nội dung/guide có tài trợ, gắn nhãn | TBD |
-| **API/data licensing** | Doanh nghiệp | API/tích hợp dữ liệu (sau) | TBD |
-| **GoWander Plus** | Người dùng | Tính năng nâng cao (sau) | TBD |
-
-### Nguyên tắc giá
-
-- **Minh bạch**: giá niêm yết, VAT rõ, thời hạn, cách huỷ.
-- **Không bán thứ hạng**: ranking tự nhiên tách khỏi ads/verified.
-- **Không phí ẩn**: phí setup, hoa hồng, hoàn tiền ghi rõ.
-- **Thử nghiệm**: gói trial/giảm giá phải có điều kiện.
-- **Đồng tiền**: VND; nếu có USD, ghi tỷ giá/nguồn.
-- **Hoá đơn/thanh toán**: theo luật Việt Nam; cần tư vấn kế toán/thuế.
+> **Không đưa vào Home R1:** Wander Mode, Journey Memory, thời tiết, quảng cáo/affiliate/booking, giá, logo/quote đối tác. Có thể thêm “Sắp có” sau khi chủ dự án duyệt, ghi rõ chưa có.
 
 ## Chính sách bắt buộc
 
 | Chính sách | Nội dung tối thiểu | R1 |
 |---|---|---|
-| **Privacy** | Dữ liệu thu thập, mục đích, lưu trữ, chia sẻ, quyền, liên hệ, cookie | ✅ |
-| **Terms** | Điều kiện dùng, tài khoản, nội dung, giới hạn trách nhiệm | ✅ |
-| **Cookies** | Loại cookie, mục đích, opt-in/opt-out | ✅ |
-| **Content/photo** | License, credit, nội dung người dùng, báo cáo vi phạm | ✅ |
-| **Map/data** | Nguồn, ASSUMED/ước tính, chủ quyền, giới hạn | ✅ |
-| **Refund/cancel** | Khi có dịch vụ trả phí/booking | ⏳ |
-| **Community** | Khi có post/comment | ⏳ R4 |
-| **Accessibility** | Cam kết, kênh phản hồi | ⏳ |
-| **Security** | Kênh báo lỗi, phạm vi | ⏳ |
-| **Partner/ads** | Điều kiện đối tác, quảng cáo, dữ liệu | ⏳ R6 |
+| **Privacy** | Dữ liệu thu thập (đặc biệt vị trí), mục đích, lưu trữ, chia sẻ, quyền, liên hệ, cookie (nếu có) | ✅ |
+| **Terms** | Điều kiện dùng, giới hạn trách nhiệm; phần tài khoản bổ sung ở R1.5 | ✅ |
+| **Map/data** | Nguồn, ASSUMED/ước tính, chủ quyền, giấy phép/credit ảnh và nội dung, giới hạn | ✅ |
+| Cookies, Content/photo | Khi có cookie không thiết yếu / nội dung người dùng | ⏳ R1.5+ |
+| Refund/cancel, Community, Accessibility, Security, Partner/ads | Khi cần | ⏳ |
 
-Tất cả policy phải có **ngày hiệu lực, phiên bản, ngôn ngữ VI/EN/ZH**; bản ZH là bản dịch tham khảo, bản VI/EN có hiệu lực nếu có tranh chấp (ghi rõ).
+Mỗi policy có **ngày hiệu lực, phiên bản**; ngôn ngữ VI/EN, bản VI có hiệu lực nếu có tranh chấp (ghi rõ). Khi thêm ZH sau R1, bản ZH là bản dịch tham khảo.
 
 ## Kiến trúc
 
 ```text
-web/apps/client-web (Next.js + TypeScript)
+web/apps/client-web (Next.js + TypeScript, static export ở R1)
   app/
-    (marketing)/        # Showcase: SSG/ISR, SEO
+    (marketing)/        # Showcase: SSG, SEO
       page.tsx          # /
-      about/page.tsx
-      services/page.tsx
-      pricing/page.tsx
-      partners/page.tsx
       download/page.tsx
-      faq/page.tsx
       contact/page.tsx
-      policies/[slug]/page.tsx
+      policies/[slug]/page.tsx   # privacy, terms, map
     (app)/              # Client Web app (sau R1)
-      ...
 ```
 
 - R1 chỉ dựng `(marketing)`; `(app)` để sau.
-- Nội dung R1: **MDX/JSON trong repo** (stable, versioned, không phụ thuộc dịch vụ ngoài); CMS sau khi có nhiều editor.
-- SEO: metadata, OG image, sitemap, robots, JSON-LD (Organization/Product/FAQ), hreflang VI/EN/ZH.
-- Analytics: privacy-friendly; consent trước cookie không cần thiết.
-- Form contact/partner: gửi API hoặc email; chống spam; không thu PII thừa.
+- Build tĩnh, host riêng (CDN/static hosting); không chạy Node chung host với OTP/DB.
+- Nội dung R1: **MDX/JSON trong repo** (versioned, không phụ thuộc dịch vụ ngoài); CMS sau.
+- SEO: metadata, OG image, sitemap, robots, JSON-LD (Organization), hreflang VI/EN.
+- Analytics: không dùng cookie theo dõi ở R1; nếu thêm, consent trước.
+- Không form ở R1 → không PII qua web, không cần endpoint/anti-spam cho Showcase.
 - Không dùng ảnh/logo đối tác khi chưa có phép.
 
 ## R1 — phạm vi Showcase
 
 **Có:**
 
-- Home, About, Services, Pricing (Beta/Liên hệ), Partners (form), Download, FAQ, Contact.
-- Privacy, Terms, Cookies, Content, Map.
-- **VI/EN/ZH**; responsive; accessibility cơ bản.
-- SEO/OG/sitemap; `hreflang` cho 3 ngôn ngữ.
+- Home, Download, Contact (email), Privacy, Terms, Map/Data.
+- **VI/EN**; responsive; accessibility cơ bản (contrast AA kiểm bằng số).
+- SEO/OG/sitemap; `hreflang` VI/EN.
 - MDX/JSON trong repo; schema nội dung có validate.
-- Screenshot app thật (nếu chưa có, dùng placeholder có nhãn “demo”).
-- 3D hero tĩnh (WebP/AVIF) + fallback 2D; không WebGL nặng ở R1.
+- Screenshot app thật (nếu chưa có, placeholder có nhãn “demo”).
+- 3D hero tĩnh (WebP/AVIF) + fallback 2D; không WebGL ở R1.
 
 **Chưa có:**
 
-- Blog/updates, partner directory, case study, status page.
-- CMS/Admin content (dùng MDX/JSON ở R1).
-- Booking/thanh toán.
-- Đa ngôn ngữ thứ ba.
+- About, Services, Pricing, Partners, FAQ, Cookies/Content policy, blog, status, CMS.
+- ZH và mọi ngôn ngữ thứ ba.
+- Form (liên hệ/partner), booking/thanh toán.
 
 ## Gate R1 cho Showcase
 
-- [ ] Nội dung dịch vụ/giá được chủ dự án duyệt; không có số bịa.
-- [ ] Privacy/Terms/Cookies/Content/Map được luật sư rà.
-- [ ] Không có testimonial/logo đối tác khi chưa xin phép.
-- [ ] Lighthouse mobile ≥ 90 (performance/SEO/accessibility/best practices) — mục tiêu, không phải cam kết tuyệt đối.
-- [ ] Kiểm tra VI/EN/ZH, link, form, 404, sitemap.
+- [ ] Chủ dự án chốt bên chịu trách nhiệm (pháp nhân hoặc cá nhân) và tên miền cho Privacy/Terms/Contact.
+- [ ] Privacy/Terms/Map-Data được luật sư rà.
+- [ ] Không có số liệu/testimonial/logo đối tác khi chưa xin phép; không hứa tính năng chưa có.
+- [ ] Lighthouse mobile ≥ 90 (mục tiêu, không phải cam kết tuyệt đối).
+- [ ] Kiểm tra VI/EN, link, 404, sitemap.
 - [ ] Không thu thập dữ liệu trước consent.
 
-## Giải thích: trang status/incident là gì
+## Sau R1 (khung nháp — chưa công bố)
 
-Là trang công khai cho biết hệ thống đang **ổn định / suy giảm / gián đoạn**, có lịch sử sự cố và bảo trì. Thường dùng khi có dịch vụ trả phí/SLA hoặc đối tác cần theo dõi. R1 chưa cần; có thể dùng Better Stack/Instatus hoặc một trang tĩnh đơn giản ở R6.
+> Phần này là khung để chủ dự án điền khi có pháp nhân/giá. **Không publish số khi chưa duyệt.**
 
-## CMS hay MDX/JSON?
+### Catalog dịch vụ
 
-**R1: MDX/JSON trong repo.** Lý do:
+| Dịch vụ | Đối tượng | Mô tả | Giá |
+|---|---|---|---|
+| **GoWander Free** | Người dùng | Map, route, discover, plan cơ bản | Miễn phí |
+| **Business Basic** | Đối tác | Hồ sơ địa điểm, thông tin, ảnh, link | TBD |
+| **Business Verified** | Đối tác | Xác minh, badge | TBD |
+| **Sponsored placement** | Đối tác | Vị trí quảng cáo có nhãn, tách ranking (R6) | TBD |
+| **Affiliate / Booking referral** | Đối tác | Referral/commission, đối soát (R6–R7) | TBD |
+| **Content sponsorship** | Đối tác | Nội dung/guide có tài trợ, gắn nhãn | TBD |
+| **API/data licensing** | Doanh nghiệp | API/tích hợp dữ liệu | TBD |
+| **GoWander Plus** | Người dùng | Tính năng nâng cao | TBD |
 
-- Ổn định, không phụ thuộc dịch vụ ngoài; nội dung nằm cùng code, có version/rollback.
-- Next.js build SSG nhanh; SEO tốt; không thêm auth/hosting CMS.
-- Phù hợp khi chủ dự án là người viết chính, có dev hỗ trợ.
+### Nguyên tắc giá
 
-**Khi nào chuyển CMS:**
+- **Minh bạch**: giá niêm yết, VAT rõ, thời hạn, cách huỷ.
+- **Không bán thứ hạng**: ranking tự nhiên tách khỏi ads/verified.
+- **Không phí ẩn**; trial/giảm giá có điều kiện.
+- **Đồng tiền**: VND; hoá đơn/thanh toán theo luật Việt Nam, cần tư vấn kế toán/thuế.
 
-- Có ≥ 2 editor thường xuyên, cần publish/schedule không qua dev.
-- Cần localized content phức tạp, workflow duyệt.
-- Chọn **Directus** (self-host, Postgres, ổn định) hoặc **Payload CMS** (TypeScript/Next.js, cùng hệ sinh thái) — đánh giá ở R2/R6, không đưa vào R1.
+### Trang status/incident
+
+Trang công khai cho biết hệ thống đang ổn định/suy giảm/gián đoạn. Cần khi có dịch vụ trả phí/SLA; có thể dùng Better Stack/Instatus hoặc trang tĩnh ở R6.
+
+### CMS hay MDX/JSON?
+
+**R1: MDX/JSON trong repo** (ổn định, có version/rollback, SSG nhanh, không thêm auth/hosting CMS). Chuyển CMS khi có ≥ 2 editor thường xuyên hoặc cần workflow duyệt/publish; đánh giá Directus hoặc Payload ở R2/R6.
 
 ## Câu hỏi mở
 
-1. Tên miền: chọn `gowander.vn` / `gowander.com` / `gowander.app`? Cần kiểm tra availability/trademark.
-2. Dịch vụ/giá: gói nào beta, gói nào mở bán sau khi có pháp nhân?
-3. Pháp nhân/hợp đồng/hoá đơn: khi nào sẵn sàng? Trước đó không checkout/không hoá đơn.
-4. Trang status: R6 hay sớm hơn nếu có partner?
-5. Ai dịch ZH: người bản ngữ hay dịch máy + review?
+1. Tên miền: `gowander.vn` / `.com` / `.app`? Kiểm tra availability/trademark.
+2. Ai là bên chịu trách nhiệm trong Privacy/Terms khi chưa có pháp nhân?
+3. Khi nào bổ sung About/Pricing/Partners (sau R1 nào)?
+4. ZH: khi nào thêm, ai dịch (người bản ngữ hay dịch máy + review)?

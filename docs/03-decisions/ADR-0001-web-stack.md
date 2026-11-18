@@ -109,7 +109,7 @@ web/
 ## Ghi chú triển khai
 
 - **Auth:** session cookie httpOnly + SameSite + CSRF; RBAC `admin`/`editor`/`partner`; không lưu token trong localStorage.
-- **Same origin:** reverse proxy phục vụ web + `/api` để cookie/CORS đơn giản.
+- **Same origin:** reverse proxy phục vụ Admin/Partner + `/api` để cookie/CORS đơn giản. **Showcase R1 là build tĩnh, host riêng** (không cần Next server cho trang marketing); Next server chỉ cần khi có `(app)` cần SSR.
 - **API client:** sinh từ OpenAPI; không viết tay DTO.
 - **MapLibre:** client component, dynamic import, không SSR.
 - **CSP:** không `unsafe-eval`; kiểm tra thư viện editor/map.
@@ -122,10 +122,10 @@ web/
 - [ ] Chốt ADR API/auth (ADR-0002).
 - [ ] Chốt data model (ADR-0003).
 - [ ] Sinh API client từ OpenAPI.
-- [ ] Dựng Showcase marketing (Home/Services/Pricing/Policies/Download).
+- [ ] Dựng Showcase marketing R1 (Home/Download/Contact/Privacy/Terms/Map-Data), build tĩnh.
 - [ ] Dựng design system tối thiểu (button, input, table, form, dialog).
 - [ ] CI web: lint/typecheck/test/build.
 
 ## Tham khảo
 
-- Quyết định cũ (repo `../GoWander`): Admin Go templates + htmx; chỉ dùng làm bài học, không mặc nhiên kế thừa.
+- Quyết định cũ (repo `../GoWander`, `ADR-037`, 16-11-2026): Admin Go server-rendered + htmx, loại React/Next vì “dự án do một người làm, chưa có Node trong dự án”. V2 chọn React + Vite (chủ dự án chốt lại 18-11-2026, giữ ADR-0001). **Đánh đổi đã biết:** thêm Node/npm, build, đồng bộ API client và CI web cho phạm vi Admin R1 chỉ là CRUD + moderation; lợi ích dùng chung cho Partner Web (R6) là dự phòng. Xem lại nếu R1 bị trễ vì dựng web.

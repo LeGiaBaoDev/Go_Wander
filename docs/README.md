@@ -25,16 +25,17 @@ README.md
     → 00-foundation/01-vision.md
     → 00-foundation/02-scope.md
     → 00-foundation/03-principles.md
-    → 01-product/01-users.md
-    → 01-product/02-feature-map.md
+    → 00-foundation/05-legacy-carryover.md
     → 01-product/04-showcase-web.md
+    → 01-product/05-brand-ui-direction.md
     → 01-product/06-saved-and-contributed-places.md
     → 02-architecture/01-system-context.md
     → 02-architecture/02-containers.md
-    → 02-architecture/04-api-contract.md
     → 03-decisions/README.md (đọc các ADR đã Accepted)
-    → 04-development/02-conventions.md
+    → 06-research/README.md
 ```
+
+Các file sau **chưa viết** (xem “Việc cần viết tiếp”): `01-product/01-users.md`, `02-feature-map.md`, `02-architecture/03-data-model.md`, `04-api-contract.md`, `05-security-privacy.md`, `04-development/*`.
 
 Khi code bắt đầu, `04-development/04-reading-order.md` sẽ mở rộng thành thứ tự đọc code (docs → backend → mobile → test).
 
@@ -79,10 +80,14 @@ Repo cũ: `../GoWander`.
 - [ ] Duyệt `01-product/04-showcase-web.md` (đã viết).
 - [ ] Duyệt `01-product/05-brand-ui-direction.md` (đã viết).
 - [ ] Duyệt `01-product/06-saved-and-contributed-places.md` (đã viết).
-- [ ] Làm Figma R0.5: tokens + màn R1 + prototype (trước UI code).
+- [ ] Duyệt `00-foundation/05-legacy-carryover.md` (bảng kế thừa từ repo cũ).
+- [ ] Làm Figma R0.5: tokens + màn R1 + prototype (trước UI code). Thứ tự gợi ý: Client Mobile (Map, Search, Place, Route, Saved) → Admin Web → Showcase.
+- [ ] Viết `01-product/01-users.md`, `02-feature-map.md`.
+- [ ] Viết `02-architecture/04-api-contract.md` (kèm `dataStatus`, `UNSUPPORTED`), `05-security-privacy.md`.
 - [ ] Viết `02-architecture/03-data-model.md` — chốt entity/ownership.
 - [x] `03-decisions/ADR-0001-web-stack.md` — đã chốt.
 - [ ] Viết `03-decisions/ADR-0002-api-auth.md` — API/auth.
 - [ ] Viết `04-development/01-toolchain.md`, `02-conventions.md`, `03-testing.md`, `04-reading-order.md`.
-- [ ] Cập nhật `06-research/01-data-sources.md` — license/status.
-- [ ] Nhờ luật sư rà `06-research/03-legal-checklist.md`.
+- [x] `06-research/README.md` — mục lục nghiên cứu kế thừa từ repo cũ (chưa kiểm chứng lại).
+- [ ] Kiểm chứng lại license/status nguồn dữ liệu, rồi viết `06-research/01-data-sources.md`.
+- [ ] Nhờ luật sư rà checklist pháp lý (bản gốc: `../GoWander/docs/research/legal-compliance-checklist-2026-11-17.md`).

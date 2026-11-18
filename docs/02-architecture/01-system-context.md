@@ -44,7 +44,7 @@ R1 gồm **Client Mobile + Admin Web + Showcase Web** (marketing). Client Web ap
 |---|---|---|---|
 | **OpenTripPlanner (OTP)** | Tìm tuyến transit + walk/bike | ✅ | Trả lỗi rõ; không bịa tuyến |
 | **OpenStreetMap / OpenFreeMap** | Bản đồ nền, dữ liệu đường | ✅ | Bản đồ có thể thiếu tile; vẫn dùng cache/fallback |
-| **Esri World Imagery** | Ảnh vệ tinh PoC | ✅ | Ẩn lớp satellite hoặc báo “chưa tải được” |
+| **Ảnh vệ tinh** | Cần nhà cung cấp có giấy phép (Esri World Imagery cần giấy phép ArcGIS) | ❌ ngoài R1 | Chọn nhà cung cấp trả phí sau R1; app không hiện lớp vệ tinh |
 | **Photon** | Geocoding fallback | ✅ | Dùng Vietmap nếu có; nếu cả hai lỗi → báo lỗi |
 | **Vietmap** | Geocoding/bản đồ trả phí (khi có key) | ⏳ | Fallback Photon |
 | **Open-Meteo** | Thời tiết cho plan/route | ⏳ R2 | Ẩn weather, không chặn plan |
@@ -73,7 +73,7 @@ flowchart LR
   API --> MEDIA[(Media storage)]
   API --> LOG[Logs / metrics]
 
-  C -->|tiles| MAP[OpenFreeMap / Esri]
+  C -->|tiles| MAP[OpenFreeMap]
   C -->|ảnh| CDN[Media CDN]
 ```
 
@@ -139,11 +139,11 @@ Admin Web → API /admin/* → PostgreSQL / media storage
 
 | Boundary | Điều gì đi qua | Kiểm soát |
 |---|---|---|
-| Client ↔ API | JSON, token Admin, ảnh upload | HTTPS, auth, rate limit, validate input |
+| Client ↔ API | JSON, bearer token (client account từ R1.5; guest không token), ảnh upload (R1.6) | HTTPS, auth, rate limit, validate input |
 | API ↔ DB | SQL, migration | Role DB riêng, không expose DB, backup |
 | API ↔ OTP | HTTP nội bộ | Timeout, không lộ OTP ra client |
 | API ↔ third-party | Geocode/weather/ảnh | Key ở server, timeout, fallback, không log secret |
-| Admin ↔ API | Session/token, upload | RBAC, CSRF, audit, giới hạn file |
+| Admin ↔ API | Session cookie httpOnly (không token trong localStorage), upload | RBAC, CSRF, audit, giới hạn file |
 | Client ↔ tile/CDN | Tile/ảnh | HTTPS, credit/license |
 
 ## Data ownership (source of truth)
@@ -166,7 +166,8 @@ Admin Web → API /admin/* → PostgreSQL / media storage
 - **Bản đồ chủ quyền:** tile/OSM không mặc nhiên đáp ứng yêu cầu pháp lý; cần rà trước release.
 - **License ảnh:** Mapillary CC BY-SA; ảnh Admin có credit.
 - **Open-Meteo free phi thương mại:** mua/self-host trước thương mại.
-- **Thiết bị thật/HTTPS:** R1 có thể chỉ emulator/simulator; production cần HTTPS.
+- **Thiết bị thật/HTTPS:** dev có thể dùng emulator/simulator; gate R1 (20–30 người thử) cần thiết bị thật và HTTPS.
+- **Tile bản đồ:** OpenFreeMap không có SLA; quyết định tự host/nhà cung cấp có hợp đồng trước pilot (xem gate R1).
 - **Không có microservice/K8s** ở R1; một backend + Postgres + OTP.
 
 ## Ngoài phạm vi file này
@@ -181,6 +182,5 @@ Admin Web → API /admin/* → PostgreSQL / media storage
 
 - Admin static phục vụ bởi Go hay reverse proxy/CDN?
 - Media storage: local dev + R2 production, hay self-host?
-- Client account/Google Sign-In có cần ở R1 không? (hiện guest-first)
 - Có cần cache route/place ở edge/CDN không?
 - Monitoring R1 tối thiểu gồm những gì?

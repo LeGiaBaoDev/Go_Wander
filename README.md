@@ -37,6 +37,8 @@ GoWander-v2/
     evidence/          # ảnh/log/biên bản kiểm chứng
 ```
 
+> Thư mục `04-development/`, `05-operations/`, `templates/`, `evidence/` chưa tồn tại; tạo khi có file đầu tiên (git không lưu thư mục rỗng).
+
 Chưa có code. Khi docs được duyệt, code sẽ được thêm theo từng vertical slice, mỗi slice có ADR/change record/evidence.
 
 ## Đọc trước
@@ -61,7 +63,8 @@ Chưa có code. Khi docs được duyệt, code sẽ được thêm theo từng 
 - [ ] Duyệt system context + containers.
 - [x] ADR-0001 web stack: React/Next/Vite.
 - [ ] ADR-0002 API/auth.
-- [ ] R1.5: client account + place submissions (account required, 1–3 photos).
+- [ ] R1.5: client account + place submissions (account required, chỉ chữ); R1.6: ảnh đóng góp sau cổng pháp lý.
+- [ ] Duyệt `docs/00-foundation/05-legacy-carryover.md` (kế thừa từ repo cũ).
 - [ ] R0.5: Figma design tokens + R1 screens + prototype before UI code.
 - [ ] Duyệt Showcase Web + brand + saved/contributed places (`docs/01-product/04`, `05`, `06`).
 - [ ] Chốt API contract v0.
