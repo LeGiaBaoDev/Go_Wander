@@ -1,0 +1,44 @@
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.iml
+*.swp
+
+# Secrets (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+.secrets/
+
+# Build / generated
+build/
+out/
+dist/
+.next/
+node_modules/
+.gradle/
+.kotlin/
+local.properties
+coverage/
+playwright-report/
+test-results/
+*.log
+tmp/
+var/
+
+# Data / database / backups (large or private)
+data/raw/
+*.pbf
+*.osm.pbf
+*.gtfs.zip
+backups/
+*.dump
+*.sql.gz
+
+# Go build output
+backend/bin/
