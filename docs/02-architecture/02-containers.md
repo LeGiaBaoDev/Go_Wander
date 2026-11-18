@@ -1,0 +1,174 @@
+# 02 — Containers
+
+- **Trạng thái:** Draft
+- **Ngày:** 18-11-2026
+- **Chủ sở hữu:** chủ dự án
+- **Liên quan:** `01-system-context.md`, `../03-decisions/ADR-0001-web-stack.md`
+
+## TL;DR
+
+GoWander chạy trên **6 container chính** ở R1:
+
+1. **Client Mobile** — Android/iOS (KMP + Compose).
+2. **Client Web / Showcase** — Next.js + TypeScript; R1 chỉ marketing (Home, Services, Pricing, Policies, Download/Contact); app sau.
+3. **Admin Web** — React + TypeScript + Vite (SPA).
+4. **Go API** — modular monolith, nơi duy nhất chứa business logic.
+5. **PostgreSQL/PostGIS** — dữ liệu nội dung/địa điểm/feedback/account.
+6. **OpenTripPlanner (OTP)** — engine tìm tuyến.
+
+Ngoài ra có **Photon/Vietmap** (geocoding), **media storage**, **map tile providers** và **monitoring**. Partner Web (React/Vite) và Client Web app mở sau; Showcase marketing có trong R1.
+
+## Sơ đồ container
+
+```mermaid
+flowchart TB
+  subgraph Clients
+    CM[Client Mobile<br/>KMP + Compose<br/>R1]
+    AW[Admin Web<br/>React + TS + Vite<br/>R1]
+    PW[Partner Web<br/>React + TS + Vite<br/>R6]
+    CW[Client Web / Showcase<br/>Next.js + TS<br/>R1 marketing; app sau]
+  end
+
+  API[Go API<br/>modular monolith]
+  DB[(PostgreSQL/PostGIS)]
+  OTP[OpenTripPlanner]
+  GEO[Photon / Vietmap]
+  MEDIA[(Media storage)]
+  LOG[Logs / metrics]
+
+  CM -->|HTTPS JSON| API
+  AW -->|HTTPS + session cookie| API
+  PW -->|HTTPS + session cookie| API
+  CW -->|HTTPS| API
+
+  API -->|SQL| DB
+  API -->|HTTP| OTP
+  API -->|HTTPS| GEO
+  API -->|upload/read| MEDIA
+  API --> LOG
+
+  CM -->|tiles| TILES[Map tiles<br/>OpenFreeMap / Esri]
+  CW -->|tiles| TILES
+  CM -->|ảnh| CDN[Media CDN]
+```
+
+Ghi chú:
+
+- **Client Mobile/Client Web** gọi tile/ảnh CDN trực tiếp theo URL API trả về; không gọi OTP/DB.
+- **Admin/Partner Web** là SPA tĩnh, phục vụ cùng origin với `/api` (reverse proxy) để cookie/CSRF đơn giản.
+- **Client Web** dùng Next.js; R1 chỉ marketing (SSG/SEO), app sau; gọi cùng API.
+- Weather (R2), Mapillary (optional), AI/Community/Booking không vẽ để giữ sơ đồ R1 rõ.
+
+## Container responsibilities
+
+| Container | Tech | R1 | Trách nhiệm | Không làm |
+|---|---|---|---|---|
+| **Client Mobile** | KMP + Compose; MapLibre; Ktor client | ✅ | UI, map, route, discover, plan local, settings, language | Không nói chuyện DB/OTP; không chứa business logic server |
+| **Admin Web** | React + TS + Vite | ✅ | CRUD places/guide/feedback/media; editor; dashboard; RBAC | Không gọi DB/OTP trực tiếp |
+| **Partner Web** | React + TS + Vite | ❌ R6 | Dashboard đối tác, khuyến mãi, ads/affiliate/booking | Không tự tính route/giá |
+| **Client Web** | Next.js + TS | ✅ marketing R1; app sau | Landing, SEO, services/pricing/policies, download; app sau | Không nhân bản API logic |
+| **Go API** | Go (chi/pgx) | ✅ | Auth, validate, route, discover, admin, media, weather proxy | Không render UI mobile; không lưu plan mặc định |
+| **PostgreSQL/PostGIS** | Postgres + PostGIS | ✅ | Place/category/guide/feedback/account/admin; geo queries | Không lưu plan cá nhân mặc định |
+| **OTP** | OpenTripPlanner | ✅ | Graph transit + OSM; tìm tuyến | Không lộ ra client |
+| **Photon/Vietmap** | Photon self-host / Vietmap API | ✅ | Geocoding/reverse | Không lưu query/PII |
+| **Media storage** | R2/S3 hoặc local dev | ✅ | Ảnh do Admin upload; credit/license | Không chứa secret |
+| **Monitoring** | Log/metric/alert | ⏳ | Health, lỗi, latency, cảnh báo | Không log PII/token |
+| **Map tiles** | OpenFreeMap / Esri | ✅ | Tile bản đồ/vệ tinh | Không dùng tile không rõ license |
+
+## Module logic trong Go API
+
+Đây **không phải container riêng**; là module trong monolith:
+
+| Module | R1 | Trách nhiệm |
+|---|---|---|
+| **Identity** | ✅ (Admin) | Đăng nhập Admin, session, RBAC; client account sau |
+| **Mobility** | ✅ | Route request/response, OTP adapter, `dataStatus` |
+| **Discover** | ✅ | Place/category/guide, PostGIS queries |
+| **Journey** | ⏳ R2 | Wander Mode, plan server-side (nếu cần), recommendations |
+| **Media** | ✅ | Upload/read ảnh, credit/license |
+| **Admin/Backoffice** | ✅ | API cho Admin Web, audit, feedback |
+| **Weather** | ⏳ R2 | Open-Meteo proxy/cache |
+| **AI** | ❌ R5 | AI Companion, bounded sources |
+| **Community** | ❌ R4 | Post/follow/comment/moderation |
+| **Ads** | ❌ R6 | Ad slot, sponsored label |
+| **Affiliate** | ❌ R6 | Referral/commission |
+| **Booking** | ❌ R7 | External/partner booking |
+
+## Giao tiếp
+
+| Từ → Đến | Giao thức | Ghi chú |
+|---|---|---|
+| Client Mobile → API | HTTPS JSON | Bearer token nếu có account; guest không token |
+| Admin/Partner Web → API | HTTPS JSON + cookie | Session httpOnly, CSRF |
+| Client Web → API | HTTPS JSON | R1 marketing/public; app và account sau |
+| API → OTP | HTTP nội bộ | Timeout, retry có kiểm soát; không lộ OTP |
+| API → DB | PostgreSQL protocol | Pool, role riêng, migration |
+| API → Photon/Vietmap | HTTPS | Key server; fallback |
+| API → Open-Meteo | HTTPS | Cache; attribution |
+| API → Media | S3 API/local | Upload validate; CDN URL |
+| Client → Tiles/CDN | HTTPS | URL do API/config trả về; credit |
+
+## Dữ liệu theo container
+
+| Dữ liệu | Container | Ghi chú |
+|---|---|---|
+| Place/category/guide | DB | PostGIS; source/license |
+| Feedback | DB | Có thể chứa PII; retention |
+| Account/Admin | DB | Password hash; session/token |
+| Plan/saved places | Client Mobile | Local-first; không mặc định lên server |
+| Route/legs | API/OTP | Không lưu lâu; cache ngắn nếu cần |
+| Weather | API cache | Không lưu lịch sử |
+| Ảnh | Media storage | Credit/license |
+| Logs/metrics | Monitoring | Không PII/token |
+
+## Triển khai R1
+
+```text
+Một máy/host hoặc docker compose:
+  - reverse proxy (HTTPS)
+  - Go API
+  - PostgreSQL/PostGIS
+  - OTP
+  - Photon (hoặc Vietmap qua API)
+  - static Admin Web
+  - Client Web / Showcase (Next.js marketing)
+  - media (local/R2)
+  - monitoring tối thiểu
+```
+
+- **Không K8s/microservice.**
+- API stateless; scale ngang sau.
+- OTP cần RAM/CPU; chạy cùng host có thể đủ pilot.
+- Admin static build có thể phục vụ bởi reverse proxy hoặc Go.
+- Client Mobile build APK/TestFlight; store release sau gate.
+
+## Bảo mật theo container
+
+| Container | Kiểm soát |
+|---|---|
+| Client Mobile | Không lưu secret; token Keychain/Keystore; certificate pinning sau |
+| Admin/Partner Web | Cookie httpOnly/SameSite, CSRF, CSP, RBAC, không token localStorage |
+| Client Web / Showcase | Public; CSP, form anti-spam; không thu PII trước consent |
+| Go API | Validate input, rate limit, auth, error envelope, không log PII |
+| DB | Role riêng, không expose port public, backup |
+| OTP | Chỉ nội bộ; timeout; không nhận input chưa validate |
+| Media | Giới hạn loại/kích thước file; scan nếu cần; credit |
+| Monitoring | Mask PII, retention |
+
+## Câu hỏi mở
+
+- Admin static phục vụ bởi Go hay reverse proxy/CDN?
+- Media R1: local hay R2 ngay?
+- Photon self-host hay Vietmap primary ngay R1?
+- OTP chạy cùng host hay container riêng?
+- Monitoring R1 tối thiểu: log + health hay thêm Prometheus?
+- Client Mobile có cần offline cache tile/route ở R1 không?
+- Showcase dùng MDX/JSON hay CMS ở R1? Domain nào?
+
+## Việc tiếp theo
+
+- [ ] Duyệt file này.
+- [ ] Viết `03-data-model.md`.
+- [ ] Viết `04-api-contract.md`.
+- [ ] Viết `05-security-privacy.md`.
+- [ ] Viết ADR-0002 (API/auth) và ADR-0003 (data/PostGIS).
