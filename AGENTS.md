@@ -30,8 +30,9 @@ Chủ dự án quyết định mọi thao tác ghi vào lịch sử Git.
 ## 2. Mỗi task một nhánh
 
 - **Một task = một nhánh = (sau này) một PR.** Không gộp nhiều task vào một nhánh; không để thay đổi của task khác lẫn vào working tree.
-- Bắt đầu task: kiểm tra `git status` sạch và đang ở `main` đã cập nhật (hoặc hỏi chủ dự án nếu không). Tạo nhánh từ `main`. Nếu working tree đang bẩn vì việc khác, **dừng và hỏi**, không tự stash/reset.
-- Không làm việc trực tiếp trên `main`.
+- **Nhánh gốc là `develop`.** `main` chỉ nhận merge từ `develop` khi phát hành (chủ dự án làm); PR của task trỏ vào `develop`.
+- Bắt đầu task: kiểm tra `git status` sạch và đang ở `develop` đã cập nhật (`git fetch` rồi tạo nhánh từ `origin/develop`; hỏi chủ dự án nếu không được). Tạo nhánh từ `develop`, không từ `main`. Nếu working tree đang bẩn vì việc khác, **dừng và hỏi**, không tự stash/reset.
+- Không làm việc trực tiếp trên `main` hay `develop`.
 - Task mới phát sinh giữa chừng (việc ngoài phạm vi) → ghi lại và hỏi, không làm chung nhánh.
 - Nhánh dài ngày bị cấm (nguyên tắc 12 ở `docs/00-foundation/03-principles.md`); giữ task nhỏ, tách được thì tách.
 

@@ -19,6 +19,26 @@ Các tài liệu dưới đây nằm ở repo cũ và **không được copy ngu
   - Phân giai đoạn: **P0** trước pilot (privacy, terms, thông báo vị trí, attribution + chủ quyền bản đồ, ảnh có giấy phép); **P1** mở tài khoản; **P2** cộng đồng/**ảnh người dùng** (chặn mở tính năng); **P3** bán vé/đặt chỗ; **P4** quảng cáo/affiliate.
 - **Hệ quả đã áp dụng trong v2 (18-11-2026):** ảnh người dùng chuyển sang R1.6; thêm gate phân loại Nghị định 147 cho R1.5; gate DPIA ở R1.
 
+## Pháp lý đối tác (thêm 18-11-2026, chưa kiểm chứng)
+
+Danh sách giấy tờ đăng ký hợp tác ở `../01-product/08-accounts-roles-partners.md` (mục 4) dựa trên hiểu biết chung, **chưa đối chiếu văn bản gốc và chưa có luật sư xác nhận**:
+
+- Đăng ký hộ kinh doanh / doanh nghiệp: NĐ 01/2021/NĐ-CP.
+- An toàn thực phẩm (ăn uống): Luật ATTP 2010, NĐ 15/2018/NĐ-CP (giấy chứng nhận hoặc cam kết khi thuộc diện miễn).
+- Lưu trú: điều kiện an ninh, trật tự theo NĐ 96/2016/NĐ-CP.
+- Lữ hành: Luật Du lịch 2017.
+- Dữ liệu cá nhân trong hồ sơ: Luật 91/2025/QH15 và NĐ 356/2025/NĐ-CP (theo checklist cũ, thay NĐ 13/2023 từ 01-01-2026).
+- Nếu GoWander thu cọc hộ quán: có thể là sàn TMĐT, phải đăng ký với Bộ Công Thương (NĐ 52/2013, sửa bởi NĐ 85/2021). **Phải hỏi luật sư trước khi bật.**
+
+## Phí đối tác (cần nghiên cứu, thêm 18-11-2026)
+
+Chủ dự án chưa chốt có thu phí đăng ký / phí tháng / phí % hay không. Cần làm trước khi vẽ màn “Gói & thanh toán”:
+
+- [ ] Khảo sát phí của các nền tảng đặt bàn và giao đồ ăn đang chạy ở TP.HCM (ghi nguồn, ngày xem).
+- [ ] Ước chi phí mỗi quán: SMS/OTP, email, phí cổng thanh toán, hỗ trợ, lưu giấy tờ.
+- [ ] Hỏi luật sư/kế toán: phí % trên cọc có làm GoWander thành sàn TMĐT không; nghĩa vụ hoá đơn khi thu phí tháng.
+- [ ] So sánh 4 hướng: (A) miễn phí đăng ký + Cơ bản 0 ₫ + Pro trả tháng + % trên cọc; (B) chỉ %; (C) chỉ phí tháng; (D) con số do chủ dự án đặt.
+
 ## Nguồn dữ liệu
 
 - **Nguồn:** `../GoWander/docs/research/data-sources-inventory.md` (DATA-1, 14-11-2026), kèm `data/sources/data-register.csv`, `source-inventory.csv`.

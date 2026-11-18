@@ -15,7 +15,7 @@ GoWander cần một **trang web showcase** công khai, nhưng R1 chỉ cần đ
 - **Sau R1:** About, Services, Pricing, Partners (form), FAQ, Cookies, Content policy, blog, partner directory, status page, CMS.
 - **Ngôn ngữ R1: VI + EN.** ZH hoãn sau R1.
 - **Không** form thu PII, không giá, không dịch vụ trả phí, không số liệu/testimonial giả.
-- **Thiết kế:** light/airy, **Sexy Blue**, 3D hero tĩnh; xem `05-brand-ui-direction.md`.
+- **Thiết kế:** nền trắng, **palette v4 teal** (thay Sexy Blue từ 18-11-2026), linh vật Gô, hero tĩnh; xem `05-brand-ui-direction.md`.
 
 ## Quyết định từ chủ dự án
 

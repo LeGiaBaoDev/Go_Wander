@@ -164,6 +164,19 @@ Mục đích: **một nghĩa cho mỗi từ**. Nếu một từ có nhiều ngh�
 | **Client vs Business** | Client = người dùng cuối; Business = Partner/Admin. |
 | **MVP vs Pilot** | MVP = phạm vi tối thiểu; Pilot = chạy thử với người dùng thật, có gate. |
 
+## 6b. Tài khoản, đối tác, nội dung (thêm 18-11-2026)
+
+| Thuật ngữ | Nghĩa |
+|---|---|
+| Chế độ quán / “Quán của tôi” | Phần trong app chỉ hiện khi tài khoản có vai trò ở một quán; làm việc hằng ngày (đơn, trạng thái, món) |
+| Chủ quán / Quản lý / Nhân viên | Ba vai trò trong một quán (`shop_membership.role`); bảng quyền ở `01-product/08-accounts-roles-partners.md` |
+| Hồ sơ hợp tác | Yêu cầu làm đối tác kèm giấy tờ, Admin xác minh trước khi cấp tài khoản (`partner_application`) |
+| Đặt món trước | Khách chọn món (tên + giá) khi đặt bàn; trả tại quán; tuỳ quán bật |
+| Cọc | Tiền giữ bàn theo chính sách quán; được chụp lại lúc đặt; hoàn theo mốc thời gian huỷ |
+| Câu chuyện | Bài về khu lịch sử/công trình, soạn bằng editor theo khối, có audio/video và ghi công media |
+| Gô | Linh vật GoWander (robot hộp kiểu xe buýt mini); “Gô đọc” là loa đọc chỉ dẫn 3 mức |
+| DEMO | Nhãn cho số liệu/nội dung giả trong bản vẽ |
+
 ## 7. Viết tắt
 
 | Viết tắt | Nghĩa |

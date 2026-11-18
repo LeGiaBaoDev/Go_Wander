@@ -29,6 +29,9 @@ README.md
     → 01-product/04-showcase-web.md
     → 01-product/05-brand-ui-direction.md
     → 01-product/06-saved-and-contributed-places.md
+    → 01-product/07-design-canvas.md (+ 07-screen-map.html)
+    → 01-product/08-accounts-roles-partners.md
+    → 01-product/09-stories-explore-search.md
     → 02-architecture/01-system-context.md
     → 02-architecture/02-containers.md
     → 03-decisions/README.md (đọc các ADR đã Accepted)
@@ -81,12 +84,15 @@ Repo cũ: `../GoWander`.
 - [ ] Duyệt `01-product/05-brand-ui-direction.md` (đã viết).
 - [ ] Duyệt `01-product/06-saved-and-contributed-places.md` (đã viết).
 - [ ] Duyệt `00-foundation/05-legacy-carryover.md` (bảng kế thừa từ repo cũ).
-- [ ] Làm Figma R0.5: tokens + màn R1 + prototype (trước UI code). Thứ tự gợi ý: Client Mobile (Map, Search, Place, Route, Saved) → Admin Web → Showcase.
+- [x] Vẽ R0.5 trên canvas claude.ai (135 màn, mọi phase) — xem `01-product/07-design-canvas.md`; chờ chủ dự án duyệt.
+- [ ] Duyệt `01-product/07-design-canvas.md`, `08-accounts-roles-partners.md`, `09-stories-explore-search.md`, ADR-0002.
+- [ ] Cập nhật Design System artifact sang palette v4.
+- [ ] Luật sư rà giấy tờ đăng ký hợp tác và nghĩa vụ TMĐT (trước khi bật thu cọc).
 - [ ] Viết `01-product/01-users.md`, `02-feature-map.md`.
 - [ ] Viết `02-architecture/04-api-contract.md` (kèm `dataStatus`, `UNSUPPORTED`), `05-security-privacy.md`.
 - [ ] Viết `02-architecture/03-data-model.md` — chốt entity/ownership.
 - [x] `03-decisions/ADR-0001-web-stack.md` — đã chốt.
-- [ ] Viết `03-decisions/ADR-0002-api-auth.md` — API/auth.
+- [ ] Viết `03-decisions/ADR-0003-api-auth.md` — API/auth (ADR-0002 đã dùng cho mô hình tài khoản/vai trò).
 - [ ] Viết `04-development/01-toolchain.md`, `02-conventions.md`, `03-testing.md`, `04-reading-order.md`.
 - [x] `06-research/README.md` — mục lục nghiên cứu kế thừa từ repo cũ (chưa kiểm chứng lại).
 - [ ] Kiểm chứng lại license/status nguồn dữ liệu, rồi viết `06-research/01-data-sources.md`.
