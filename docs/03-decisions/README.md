@@ -21,9 +21,10 @@ ADR ghi lại **quyết định kiến trúc** và lý do. Một ADR đã Accept
 | ADR | Tiêu đề | Trạng thái | Ngày |
 |---|---|---|---|
 | [ADR-0001](./ADR-0001-web-stack.md) | Web stack: React + TypeScript, Next.js cho Client Web, Vite cho Admin/Partner | Accepted | 18-11-2026 |
-| ADR-0002 | API contract & auth (dự kiến) | Planned | — |
-| ADR-0003 | Data model & PostGIS (dự kiến) | Planned | — |
-| ADR-0004 | Transit/OTP & dữ liệu giả định (dự kiến) | Planned | — |
+| [ADR-0002](./ADR-0002-account-roles.md) | Một kiểu tài khoản, quyền theo vai trò ở từng quán; Admin cấp tài khoản quán | Proposed | 18-11-2026 |
+| ADR-0003 | API contract & auth (dự kiến) | Planned | — |
+| ADR-0004 | Data model & PostGIS (dự kiến) | Planned | — |
+| ADR-0005 | Thuật toán tìm đường (lọc đúng luật → đa tiêu chí → 4 nhánh), transit/OTP & dữ liệu giả định (dự kiến; bản giải thích: canvas `RouteLogic`) | Planned | — |
 
 ## Quy ước
 
