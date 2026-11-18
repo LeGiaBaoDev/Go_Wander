@@ -13,10 +13,12 @@ Hướng thị giác: **sáng, thoáng, đáng tin, có chiều sâu**.
 - Màu chính: **Sexy Blue** (xanh dương rực, gradient); màu nhấn nhỏ: **orange** (tùy chọn).
 - **3D hero** (bản đồ/địa danh/phương tiện) + floating cards.
 - Bo góc lớn, bóng mềm, nhiều khoảng trắng.
-- Typography đậm, rõ; VI/EN dùng Be Vietnam Pro; ZH dùng Noto Sans SC.
+- Typography đậm, rõ; VI/EN dùng Be Vietnam Pro (ZH hoãn sau R1).
 - 3D chỉ ở hero/section chính; không dùng khắp nơi, không làm nặng trang.
 
 ## Ảnh tham khảo — lấy gì, bỏ gì
+
+> **Chưa kiểm chứng được:** 6 ảnh mẫu dưới đây chưa nằm trong repo (`docs/evidence/` chưa có). Cần lưu ảnh (hoặc link nguồn) trước khi duyệt hướng thiết kế. Ghi chú “app có dark” ở câu hỏi mở chưa khớp phạm vi R0.5 (chưa có token dark).
 
 | Mẫu | Lấy | Không lấy |
 |---|---|---|
@@ -37,11 +39,12 @@ Hướng thị giác: **sáng, thoáng, đáng tin, có chiều sâu**.
 |---|---|---|
 | `--ink` | `#071A33` | Chữ chính/heading |
 | `--navy` | `#0A2A5E` | Footer, section tối, chữ trên nền sáng |
-| `--blue` | `#007BFF` | **Brand chính**, CTA, link, icon |
-| `--blue-bright` | `#00A3FF` | Gradient, hover, chart |
-| `--sky` | `#6BC5FF` | Gradient nhẹ, illustration |
+| `--blue` | `#007BFF` | **Brand chính** cho nền lớn, icon, minh hoạ, gradient. **Không** đặt chữ trắng cỡ thường lên đây (3.98:1, không đạt AA) |
+| `--blue-strong` | `#0062E0` | **Nền nút primary + link/chữ xanh**; chữ trắng trên nền này đạt 5.49:1, chữ này trên nền trắng cũng đạt AA |
+| `--blue-bright` | `#00A3FF` | Gradient, hover, chart; không đặt chữ trắng (2.73:1) |
+| `--sky` | `#6BC5FF` | Gradient nhẹ, illustration; không đặt chữ trắng (1.9:1) |
 | `--ice` | `#E6F4FF` | Surface soft, badge, icon tile |
-| `--orange` | `#F97316` | Accent nhỏ (badge “Beta”, một CTA phụ); có thể bỏ |
+| `--orange` | `#F97316` | Accent nhỏ (badge “Beta”, một CTA phụ); có thể bỏ. Chữ trên nền cam dùng `--ink` (6.22:1), không dùng chữ trắng (2.8:1) |
 | `--coral` | `#FB7185` | Cảnh báo/“hot”, rất ít |
 | `--teal` | `#0F766E` | Success/data phụ; không làm brand |
 | `--bg` | `#F5FAFF` | Nền trang |
@@ -59,9 +62,10 @@ Hướng thị giác: **sáng, thoáng, đáng tin, có chiều sâu**.
 --glow-blue: 0 20px 60px rgba(0, 123, 255, .25);
 ```
 
-- Hero có thể dùng **nền sáng + gradient mesh xanh nhạt + 3D xanh**, hoặc **gradient xanh đậm + chữ trắng** ở section CTA.
+- Hero có thể dùng **nền sáng + gradient mesh xanh nhạt + 3D xanh** (chữ `--ink`/`--navy`), hoặc **nền `--navy`/`--blue-strong` + chữ trắng** ở section CTA.
+- `--gradient-hero` (đến `--sky`) chỉ làm nền trang trí/3D; **không đặt chữ trắng lên đoạn sáng của gradient**.
 - Không dùng gradient xanh cho toàn bộ trang; chỉ hero/CTA/footer.
-- Chữ trên nền xanh phải trắng và đủ contrast; không dùng xanh nhạt làm chữ.
+- Mọi cặp chữ/nền phải kiểm bằng số: ≥ 4.5:1 chữ thường, ≥ 3:1 chữ lớn (≥ 24px hoặc ≥ 18.66px đậm) và thành phần UI.
 
 Quy tắc:
 
@@ -75,7 +79,7 @@ Quy tắc:
 | Ngôn ngữ | Font | Weight |
 |---|---|---|
 | VI/EN | **Be Vietnam Pro** | 400/500/600/700/800 |
-| ZH | **Noto Sans SC** | 400/500/700 |
+| ZH (sau R1) | **Noto Sans SC** | 400/500/700 |
 | Fallback | system-ui, -apple-system, “Segoe UI”, sans-serif | — |
 
 - Display/heading: Be Vietnam Pro 700/800, tracking hơi âm (`-0.02em`).
@@ -116,7 +120,7 @@ Quy tắc:
 
 - H1 56–72px desktop, 36–44px mobile.
 - CTA chính: blue pill (hoặc trắng trên nền xanh); CTA phụ: outline navy/blue.
-- Floating cards: route, weather, “3 điểm gần đây”; không bịa số.
+- Floating cards: route, “3 điểm gần đây”; không bịa số; không card thời tiết (chưa có ở R1).
 
 ### Section map/dịch vụ
 
@@ -131,7 +135,7 @@ Quy tắc:
 - 3–4 card, icon tile ice/blue, tiêu đề 18–20px, mô tả 14–16px.
 - Bo 20–24px, shadow nhẹ, hover nhẹ.
 
-### Pricing
+### Pricing (sau R1 — không có trang Pricing ở R1)
 
 - 3 card; gói giữa highlight (viền blue).
 - R1: giá “Beta / Liên hệ”; không số bịa.
@@ -146,7 +150,7 @@ Quy tắc:
 
 | Component | Style |
 |---|---|
-| Button primary | Blue fill, white text, pill 999, height 48 |
+| Button primary | `--blue-strong` fill, white text, pill 999, height 48 |
 | Button secondary | Outline navy/blue, transparent |
 | Card | White, radius 20–24, border `--line`, shadow mềm |
 | Chip | Ice/white, radius 999, icon + text |
@@ -169,7 +173,7 @@ Quy tắc:
 - Touch target ≥ 48px.
 - Không dùng màu làm tín hiệu duy nhất.
 - Form có label, error text, `aria`.
-- Ngôn ngữ `lang` đúng cho VI/EN/ZH.
+- Ngôn ngữ `lang` đúng cho VI/EN (thêm ZH khi mở ZH).
 
 ## Performance
 
@@ -189,12 +193,11 @@ Quy tắc:
 ## R1 — phạm vi thiết kế
 
 - Hero 3D tĩnh + 2 floating card.
-- Section map/dịch vụ (screenshot/map có nhãn).
-- 4 feature card.
-- Pricing “Beta / Liên hệ”.
-- Partner form.
-- 5 policy page.
-- VI/EN/ZH; responsive; accessibility cơ bản.
+- Section map (screenshot/map có nhãn).
+- 4 feature card (chỉ tính năng R1).
+- Trang Download, Contact (email).
+- 3 policy page (Privacy, Terms, Map/Data); chỉ typography.
+- VI/EN; responsive; accessibility cơ bản.
 
 ## Câu hỏi mở
 

@@ -32,7 +32,7 @@ Mục đích: **một nghĩa cho mỗi từ**. Nếu một từ có nhiều ngh�
 | **Moderation** | Duyệt/sửa/gộp/từ chối nội dung user; có audit |
 | **Verification** | Trạng thái tin cậy của place: unverified/verified/official |
 | **UGC** | User-generated content: địa điểm, ảnh, bài viết, bình luận |
-| **Photo submission** | Ảnh user gửi kèm đề xuất địa điểm; pending, phải duyệt, strip EXIF |
+| **Photo submission** | Ảnh user gửi kèm đề xuất địa điểm; **R1.6** (sau cổng pháp lý); pending, phải duyệt, strip EXIF |
 | **Comment** | Bình luận của user; R4 text-only, cần account/moderation; ảnh comment sau |
 | **Journey Memory** | Bản ghi hành trình đã đi: plan, ảnh, ghi chú, thời gian |
 | **Storybook** | Cách trình bày Journey Memory thành câu chuyện/album riêng tư |
@@ -78,9 +78,9 @@ Mục đích: **một nghĩa cho mỗi từ**. Nếu một từ có nhiều ngh�
 | **Vietmap** | Nhà cung cấp bản đồ/geocoding Việt Nam; dùng có key |
 | **`dataStatus`** | Trạng thái dữ liệu trong API: `OFFICIAL`, `ASSUMED`, `BEST_EFFORT`, `UNSUPPORTED` |
 | **Pilot area** | TP.HCM — nơi transit được làm sâu (bus + metro L1 + walk/bike) |
-| **Coverage** | Vùng/mode được hỗ trợ routing; ngoài coverage chỉ map/discover |
-| **ASSUMED** | Dữ liệu giả định/ước tính cho pilot, không phải lịch chính thức; phải ghi rõ |
-| **BEST_EFFORT** | Route/geometry từ OSM, không có timetable đầy đủ; chỉ tham khảo |
+| **Coverage** | Vùng/mode được hỗ trợ routing; ngoài coverage chỉ map/search/place |
+| **ASSUMED** | Dữ liệu giả định/ước tính cho pilot, không phải lịch chính thức; phải ghi rõ phần có nguồn và phần ước tính |
+| **BEST_EFFORT** | Route/geometry từ OSM, không có timetable đầy đủ; chỉ tham khảo. **Chưa dùng ở R1** (để dành cho vùng mở sau) |
 | **UNSUPPORTED** | Chưa hỗ trợ routing tại khu vực/mode |
 | **OFFICIAL** | Dữ liệu từ nguồn chính thức; chỉ dùng khi có bằng chứng |
 | **DEMO** | Dữ liệu mẫu cho demo; không dùng như fact |
@@ -160,7 +160,7 @@ Mục đích: **một nghĩa cho mỗi từ**. Nếu một từ có nhiều ngh�
 | **ASSUMED vs OFFICIAL** | ASSUMED = giả định/ước tính; OFFICIAL = có nguồn chính thức. Không được gọi ASSUMED là official. |
 | **Recommendation vs Ads** | Recommendation = gợi ý tự nhiên có giải thích; Ads = trả tiền, phải gắn nhãn. |
 | **Memory vs Storybook** | Memory = dữ liệu hành trình; Storybook = cách trình bày thành câu chuyện. |
-| **Guest vs Account** | Guest = không đăng nhập, dữ liệu trên máy; Account = đồng bộ/community. |
+| **Guest vs Account** | Guest = không đăng nhập, dữ liệu trên máy; Account = đề xuất địa điểm (R1.5), đồng bộ (R3), community (R4). |
 | **Client vs Business** | Client = người dùng cuối; Business = Partner/Admin. |
 | **MVP vs Pilot** | MVP = phạm vi tối thiểu; Pilot = chạy thử với người dùng thật, có gate. |
 

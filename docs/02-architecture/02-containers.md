@@ -10,7 +10,7 @@
 GoWander chạy trên **6 container chính** ở R1:
 
 1. **Client Mobile** — Android/iOS (KMP + Compose).
-2. **Client Web / Showcase** — Next.js + TypeScript; R1 chỉ marketing (Home, Services, Pricing, Policies, Download/Contact); app sau.
+2. **Client Web / Showcase** — Next.js + TypeScript; R1 chỉ marketing (Home, Download, Contact, Privacy, Terms, Map/Data), build tĩnh; app sau.
 3. **Admin Web** — React + TypeScript + Vite (SPA).
 4. **Go API** — modular monolith, nơi duy nhất chứa business logic.
 5. **PostgreSQL/PostGIS** — dữ liệu nội dung/địa điểm/feedback/account.
@@ -47,7 +47,7 @@ flowchart TB
   API -->|upload/read| MEDIA
   API --> LOG
 
-  CM -->|tiles| TILES[Map tiles<br/>OpenFreeMap / Esri]
+  CM -->|tiles| TILES[Map tiles<br/>OpenFreeMap]
   CW -->|tiles| TILES
   CM -->|ảnh| CDN[Media CDN]
 ```
@@ -66,14 +66,14 @@ Ghi chú:
 | **Client Mobile** | KMP + Compose; MapLibre; Ktor client | ✅ | UI, map, route, discover, plan local, settings, language | Không nói chuyện DB/OTP; không chứa business logic server |
 | **Admin Web** | React + TS + Vite | ✅ | CRUD places/guide/feedback/media; editor; dashboard; RBAC; **moderation queue R1.5** | Không gọi DB/OTP trực tiếp |
 | **Partner Web** | React + TS + Vite | ❌ R6 | Dashboard đối tác, khuyến mãi, ads/affiliate/booking | Không tự tính route/giá |
-| **Client Web** | Next.js + TS | ✅ marketing R1; app sau | Landing, SEO, services/pricing/policies, download; app sau | Không nhân bản API logic |
+| **Client Web** | Next.js + TS | ✅ marketing R1 (6 trang, tĩnh); app sau | Landing, SEO, download, contact (email), Privacy/Terms/Map-Data; app sau | Không nhân bản API logic; không form thu PII ở R1 |
 | **Go API** | Go (chi/pgx) | ✅ | Auth, validate, route, discover, admin, media, weather proxy | Không render UI mobile; không lưu plan mặc định |
 | **PostgreSQL/PostGIS** | Postgres + PostGIS | ✅ | Place/category/guide/feedback/account/admin; geo queries | Không lưu plan cá nhân mặc định |
 | **OTP** | OpenTripPlanner | ✅ | Graph TP.HCM (bus + Metro L1 + OSM); tìm tuyến; vùng khác sau | Không lộ ra client; không gộp graph toàn quốc |
 | **Photon/Vietmap** | Photon self-host / Vietmap API | ✅ | Geocoding/reverse | Không lưu query/PII |
-| **Media storage** | R2/S3 hoặc local dev | ✅ | Ảnh Admin; **ảnh đề xuất R1.5** (1–3, pending, strip EXIF); credit/license | Không chứa secret |
+| **Media storage** | R2/S3 hoặc local dev | ✅ | Ảnh Admin; **ảnh đề xuất R1.6** (1–3, pending, strip EXIF, sau cổng pháp lý); credit/license | Không chứa secret |
 | **Monitoring** | Log/metric/alert | ⏳ | Health, lỗi, latency, cảnh báo | Không log PII/token |
-| **Map tiles** | OpenFreeMap / Esri | ✅ | Tile bản đồ/vệ tinh | Không dùng tile không rõ license |
+| **Map tiles** | OpenFreeMap (không SLA; quyết định tự host/nhà cung cấp trước pilot) | ✅ | Tile bản đồ 2D/3D | Không dùng tile không rõ license; không vệ tinh ở R1 |
 
 ## Module logic trong Go API
 
@@ -115,7 +115,7 @@ Ghi chú:
 | Place/category/guide | DB | PostGIS; source/license |
 | Feedback | DB | Có thể chứa PII; retention |
 | Place submissions | DB | R1.5; account_id, status, moderation; không public khi pending |
-| Place submission photos | DB + media | R1.5; 1–3 ảnh, pending, EXIF stripped, credit; chỉ public khi duyệt |
+| Place submission photos | DB + media | R1.6; 1–3 ảnh, pending, EXIF stripped, credit; chỉ public khi duyệt |
 | Moderation audit | DB | R1.5; ai duyệt, khi nào, lý do |
 | Account/Admin | DB | Password hash; session/token |
 | Plan/saved places | Client Mobile | Local-first; saved places local ở R1; sync R3 |
@@ -134,11 +134,11 @@ Một máy/host hoặc docker compose:
   - OTP (graph TP.HCM)
   - Photon (hoặc Vietmap qua API)
   - static Admin Web
-  - Client Web / Showcase (Next.js marketing)
   - media (local/R2)
   - monitoring tối thiểu
 ```
 
+- **Showcase R1 là build tĩnh (static export) host riêng** (CDN/static hosting), không chạy Node chung host với OTP/DB; để trang marketing không phụ thuộc host pilot.
 - **Không K8s/microservice.**
 - API stateless; scale ngang sau.
 - OTP cần RAM/CPU; chạy cùng host có thể đủ pilot.

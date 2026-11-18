@@ -7,7 +7,7 @@
 
 ## TL;DR
 
-GoWander là **nền tảng khám phá và di chuyển thông minh**: pilot sâu tại TP.HCM, bản đồ/discover phủ Việt Nam, metro TP.HCM trước; bus và các mode khác mở rộng theo dữ liệu.
+GoWander là **nền tảng khám phá và di chuyển thông minh**: pilot sâu tại TP.HCM (tìm tuyến đi bộ/bus/metro/xe đạp), bản đồ và tìm kiếm phủ Việt Nam; vùng khác chỉ mở tìm tuyến khi có graph và dữ liệu riêng.
 
 - **2 app mobile mục tiêu:** GoWander Client (du khách) và GoWander Business (Partner + Admin).
 - **3 khu vực web:** Client Web (Showcase marketing + app), Partner Web, Admin Web.
@@ -50,25 +50,26 @@ GoWander không phủ đều mọi nơi ngay từ R1. Có 2 lớp:
 
 | Lớp | Phạm vi R1 | Ghi chú |
 |---|---|---|
-| **Pilot sâu** | **TP.HCM** | Bus + Metro L1 + đi bộ + xe đạp; dữ liệu transit giả định/ASSUMED; Discover/Guide TP.HCM |
-| **Toàn quốc** | Bản đồ, tìm địa điểm, Discover/Guide, lưu địa điểm | Đi bộ/xe đạp best-effort theo OSM; bus/metro chỉ khi dữ liệu đủ |
+| **Pilot sâu** | **TP.HCM** | Bus + Metro L1 + đi bộ + xe đạp trên **một graph OTP TP.HCM**; dữ liệu transit giả định/ASSUMED; Discover/Guide TP.HCM |
+| **Toàn quốc** | Bản đồ, tìm kiếm địa điểm/địa chỉ, xem place, lưu địa điểm | **Không** tìm tuyến ngoài TP.HCM trong R1 |
+
+> Nguồn đối chiếu: repo cũ chỉ có graph OTP cắt theo khung TP.HCM và có test case “ngoài vùng phủ” kỳ vọng lỗi rõ ràng (`../GoWander/data/test-cases/route-cases.csv` RC-09; `docs/decisions/ADR-032`; đọc 18-11-2026).
 
 ### Ma trận coverage R1
 
 | Khu vực | Map/Search | Discover/Guide | Đi bộ/Xe đạp | Bus | Metro |
 |---|---|---|---|---|---|
 | **TP.HCM** | ✅ | ✅ sâu | ✅ | ✅ `ASSUMED` | ✅ L1 `ASSUMED` |
-| **Hà Nội** | ✅ | ⏳ biên tập sau | ✅ best-effort | ⏳ data gate | ⏳ sau |
-| **Đà Nẵng/Hội An/Đà Lạt/Phú Quốc** | ✅ | ⏳ biên tập sau | ✅ best-effort | ⏳ data gate | ❌ |
-| **Tỉnh/thành khác** | ✅ | ⏳ | ✅ best-effort | ⏳ data gate | ❌ |
+| **Hà Nội** | ✅ | ⏳ biên tập sau | ❌ `UNSUPPORTED` | ❌ | ❌ |
+| **Đà Nẵng/Hội An/Đà Lạt/Phú Quốc** | ✅ | ⏳ biên tập sau | ❌ `UNSUPPORTED` | ❌ | ❌ |
+| **Tỉnh/thành khác** | ✅ | ⏳ | ❌ `UNSUPPORTED` | ❌ | ❌ |
 
 Quy tắc:
 
-- **Metro:** chỉ TP.HCM (L1) trong R1. Hà Nội/metro khác là phase sau, cần graph/GTFS riêng.
-- **Bus:** TP.HCM là pilot. Tỉnh/thành khác chỉ bật routing khi có GTFS/OSM đủ tốt; nếu không, chỉ map/discover.
-- **Đi bộ/xe đạp:** best-effort toàn quốc theo OSM; không hứa đủ đường/hẻm.
+- **Mọi mode tìm tuyến chỉ có ở TP.HCM trong R1.** Vùng khác mở sau, từng vùng một, khi có graph và dữ liệu riêng (ADR transit sau R1).
+- **Metro:** chỉ TP.HCM (L1). Hà Nội/metro khác cần graph/GTFS riêng.
 - **Ô tô/xe máy:** chưa làm; cần engine/audit riêng.
-- **Ngoài coverage:** app vẫn xem map/place; tab tuyến hiện **“Chưa hỗ trợ tìm tuyến tại khu vực này”**, không bịa route.
+- **Ngoài coverage:** app vẫn xem map/place; tab tuyến hiện **“Chưa hỗ trợ tìm tuyến tại khu vực này”**, không bịa route. Điểm đi hoặc đến ngoài khung TP.HCM trả `UNSUPPORTED` (khác “không có tuyến”).
 - **Không gộp OTP toàn quốc vào một graph HCMC.** Mỗi vùng có graph/coverage riêng khi đủ dữ liệu.
 
 ### Trạng thái dữ liệu
@@ -76,9 +77,9 @@ Quy tắc:
 | Status | Nghĩa | Dùng ở đâu |
 |---|---|---|
 | `OFFICIAL` | Nguồn chính thức | Khi có GTFS/GTFS-RT chính thức |
-| `ASSUMED` | Lịch/route sinh cho pilot, không phải chính thức | TP.HCM R1 |
-| `BEST_EFFORT` | OSM/geometry, không có timetable đầy đủ | Walk/bike/bus ngoài HCMC khi bật |
-| `UNSUPPORTED` | Chưa hỗ trợ routing | Khu vực chưa có graph/dữ liệu |
+| `ASSUMED` | Lịch/route sinh cho pilot, không phải chính thức. Ghi rõ phần **có nguồn** (ví dụ giờ đầu/cuối, số lượt Metro L1) và phần **ước tính** (ví dụ tốc độ bus) trong feed | TP.HCM R1 |
+| `BEST_EFFORT` | OSM/geometry, không có timetable đầy đủ | Chưa dùng ở R1; để dành cho vùng mở sau |
+| `UNSUPPORTED` | Chưa hỗ trợ routing | Mọi khu vực ngoài TP.HCM ở R1 |
 
 ## Vòng lặp sản phẩm
 
@@ -90,7 +91,8 @@ Discover → Wander Mode → Explore → Journey Memory → Community → Discov
 |---|---|---|
 | Design gate | Figma design system + luồng R1 + prototype | R0.5 |
 | Foundation / Pilot | Discover + plan cơ bản + Explore | R1 |
-| Identity & Contributions | Tài khoản client + đề xuất địa điểm + moderation | R1.5 |
+| Identity & Contributions | Tài khoản client + đề xuất địa điểm (chữ) + moderation | R1.5 |
+| Photo Contributions | Ảnh đóng góp sau cổng pháp lý | R1.6 |
 | Wander Mode | Lập hành trình, giải thích, Plan B | R2 |
 | Retention | Journey Memory, Storybook | R3 |
 | Community Beta | Post, Follow, Comment, Post-to-Journey | R4 |
@@ -118,7 +120,8 @@ Discover → Wander Mode → Explore → Journey Memory → Community → Discov
 | **R0** | Docs & Architecture | Chốt lại dự án trước khi code | Vision, scope, principles, ADR stack, API contract v0, data/legal risk register | Code sản phẩm | Docs được duyệt |
 | **R0.5** | **Design gate** | Figma trước khi code UI | Design tokens (Sexy Blue), components, màn R1 (Client/Admin/Showcase), prototype, accessibility | Màn R2/R4, AI, booking | Figma + prototype được duyệt; dev feasible |
 | **R1** | **Pilot Foundation** | Người dùng đầu tiên khám phá và đi lại có giá trị | Client Mobile + Admin Web + Showcase Web (marketing); map; discover/guide; walk/bus/metro/bicycle; plan cá nhân cơ bản; **lưu địa điểm local**; VI/EN; dữ liệu + test | Community, AI, Ads, Affiliate, Booking, Partner Web, Business Mobile, Client Web app, **thêm địa điểm** | 20–30 user thử; route/admin/UI test; không P0 |
-| **R1.5** | **Identity & Contributions** | Người dùng có tài khoản và đóng góp địa điểm có kiểm duyệt | Client account (email/password + Google, verified); form đề xuất địa điểm + **1–3 ảnh**; Admin queue; trạng thái submission; audit | Ảnh bình luận, collections, community, OSM export, AI, Ads | Auth + moderation + photo/duplicate test; legal terms |
+| **R1.5** | **Identity & Contributions** | Người dùng có tài khoản và đóng góp địa điểm (chỉ chữ) có kiểm duyệt | Client account (email/password + Google, verified; xoá tài khoản trong app); form đề xuất địa điểm **không ảnh**; Admin queue; trạng thái submission; audit | **Ảnh người dùng**, ảnh bình luận, collections, community, OSM export, AI, Ads | Auth + moderation + duplicate test; legal terms; phân loại Nghị định 147 + DPIA đã được luật sư xác nhận |
+| **R1.6** | **Photo Contributions** | Cho phép ảnh đóng góp sau khi qua cổng pháp lý | 1–3 ảnh/đề xuất; duyệt từng ảnh; strip EXIF; license/credit | Ảnh bình luận, community | Cổng pháp lý ảnh người dùng (bản quyền, quyền riêng tư, Nghị định 147); photo/EXIF test |
 | **R2** | **Wander Mode** | Hero feature: lập hành trình theo thời gian/sở thích/điểm xuất phát | Itinerary nhiều điểm; giải thích gợi ý; Plan B; recommendation; weather-aware | Community, AI, Ads | Usability test đạt; plan quality |
 | **R3** | **Retention** | Người dùng quay lại và lưu kỷ niệm | Journey Memory; Storybook; lưu/mở lại; chia sẻ riêng tư | Community đầy đủ, AI | Retention test |
 | **R4** | **Community Beta** | Nội dung người dùng và vòng lặp xã hội | Post, Follow, Comment, Post-to-Journey, moderation | Ads, Booking | Legal + moderation gate |
@@ -131,13 +134,13 @@ Discover → Wander Mode → Explore → Journey Memory → Community → Discov
 
 - **Mục tiêu:** chốt giao diện R1 trong Figma trước khi viết UI code.
 - **Phải có:**
-  - Design tokens: Sexy Blue, typography VI/EN/ZH, spacing, radius, shadow.
+  - Design tokens: Sexy Blue, typography VI/EN, spacing, radius, shadow (ZH để sau R1).
   - Components: button, input, select, card, chip, table, dialog, toast, empty/loading/error, map overlay.
   - Client Mobile R1: onboarding, map, search, place detail, Discover, Guide, route results/detail, navigation, plan, saved places, settings/language.
   - Admin Web R1: login, dashboard, places, guide, feedback, media; trạng thái bảng/form.
-  - Showcase Web R1: Home, Services, Pricing, Partners, Download, FAQ, Contact, Policies.
+  - Showcase Web R1: Home, Download, Contact, Privacy, Terms, Map/Data.
   - Prototype cho 3 luồng chính: tìm tuyến, lưu địa điểm, admin duyệt nội dung (R1).
-  - Accessibility: contrast, focus, touch target, text size; copy VI/EN/ZH thật.
+  - Accessibility: contrast AA (kiểm bằng số, không chỉ bằng mắt), focus, touch target, text size; copy VI/EN thật.
   - Handoff: component names, states, spacing, responsive breakpoints.
 - **Không có:** màn R2/R4, community, AI, booking, ảnh comment.
 - **Gate:** chủ dự án duyệt Figma/prototype; dev xác nhận khả thi; token/component dùng được trong code.
@@ -153,31 +156,33 @@ Discover → Wander Mode → Explore → Journey Memory → Community → Discov
 
 1. Mở app, chọn **Tiếng Việt / English**.
 2. Xem bản đồ, tìm địa điểm, xem chi tiết + nguồn/giấy phép.
-3. Tìm tuyến **đi bộ / bus / metro / xe đạp** tại TP.HCM; ngoài TP.HCM xem map/discover, tuyến chỉ khi có coverage.
+3. Tìm tuyến **đi bộ / bus / metro / xe đạp** tại TP.HCM; ngoài TP.HCM chỉ xem map/search/place, tab tuyến hiện “Chưa hỗ trợ”.
 4. Khám phá Discover/Guide, lưu địa điểm, thêm địa điểm vào plan.
 5. Tạo plan nhiều điểm, xem thời gian/đường đi, lưu và mở lại.
 6. Admin thêm/sửa địa điểm hoặc nội dung guide; thay đổi hiện trong app.
-7. Mở Showcase Web, đọc dịch vụ/giá/chính sách và tải app.
+7. Mở Showcase Web, hiểu GoWander là gì, đọc chính sách và tải app.
 8. Mọi dữ liệu giả định/ước tính được ghi rõ.
 
 ### Phạm vi R1
 
 | Khu vực | Phải có |
 |---|---|
-| **Client Mobile** | Android + iOS; onboarding; map 2D/3D/satellite; search; place detail; Discover; Guide; plan cơ bản; Settings/Language; feedback |
-| **Smart Mobility** | TP.HCM: đi bộ, bus, metro, xe đạp; so sánh tuyến; chỉ dẫn từng bước; nhãn `ASSUMED`; ngoài TP.HCM: map/discover, route chỉ khi coverage; lỗi mạng rõ ràng |
+| **Client Mobile** | Android + iOS; onboarding; map 2D/3D (không vệ tinh ở R1); search; place detail; Discover; Guide; plan cơ bản; Settings/Language; feedback |
+| **Smart Mobility** | TP.HCM: đi bộ, bus, metro, xe đạp; so sánh tuyến; chỉ dẫn từng bước; nhãn `ASSUMED`; ngoài TP.HCM: map/search, route trả `UNSUPPORTED`; lỗi mạng rõ ràng |
 | **Discover & Guide** | Địa điểm, category, tìm kiếm, guide TP.HCM, câu chuyện; nguồn/giấy phép |
 | **Plan** | Tạo plan, thêm/xoá/sắp xếp điểm, thời gian ước tính, lưu trên máy, mở lại |
 | **Saved places** | Lưu/bỏ lưu địa điểm; danh sách Đã lưu local; mở place/chỉ đường/thêm vào plan |
 | **Admin Web** | Đăng nhập; quản lý places/guide/feedback/media; phân quyền cơ bản |
-| **Showcase Web** | Home, About, Services, Pricing, Download, FAQ, Contact, Policies; VI/EN; SEO |
+| **Showcase Web** | Home, Download, Contact (email), Privacy, Terms, Map/Data; VI/EN; SEO; không form thu PII; không giá/dịch vụ trả phí |
 | **Data** | OSM/GTFS giả định; `dataStatus`; seed TP.HCM; test route case |
 | **Quality** | Unit/integration/UI test; accessibility cơ bản; crash-free; evidence |
 
 ### Không có trong R1
 
 - Community (post/follow/comment).
-- **Routing bus/metro toàn quốc** (chỉ TP.HCM R1; vùng khác theo coverage).
+- **Tìm tuyến ngoài TP.HCM** (mọi mode; vùng khác mở sau, từng vùng một).
+- **Ảnh vệ tinh** (Esri World Imagery cần giấy phép ArcGIS; xem `05-legacy-carryover.md`).
+- **Ảnh do người dùng gửi** (R1.6, sau cổng pháp lý).
 - **Metro Hà Nội/thành phố khác** (sau).
 - **Bus liên tỉnh** (không thuộc R1).
 - **Thêm địa điểm** (R1.5; cần tài khoản + moderation).
@@ -197,7 +202,7 @@ Discover → Wander Mode → Explore → Journey Memory → Community → Discov
 | Bus | ✅ | GTFS giả định; nhãn `ASSUMED` |
 | Metro | ✅ | Metro L1 giả định; nhãn `ASSUMED` |
 | Xe đạp | ✅ R1 | OTP/OSM; phải test route case + hạ tầng trước gate R1 |
-| Ô tô | ❌ | Cần audit one-way/cầu/hầm/cấm rẽ |
+| Ô tô | ❌ | Cần audit one-way/cầu/hầm/cấm rẽ và dữ liệu giao thông. Repo cũ đã có mode CAR (ADR-032); v2 hoãn có chủ đích |
 | Xe máy | ❌ | OTP không có profile; cần engine riêng |
 | Phà/buýt sông | ❌ | Chờ dữ liệu |
 | Ride-hailing | 🔗 | Link-out sau; không tìm tuyến |
@@ -209,32 +214,39 @@ Discover → Wander Mode → Explore → Journey Memory → Community → Discov
 - [ ] Docs/ADR liên quan được duyệt.
 - [ ] API contract v0 + OpenAPI chạy.
 - [ ] Data source/license/assumption register.
-- [ ] Security/privacy checklist + DPIA sơ bộ.
+- [ ] Security/privacy checklist + DPIA sơ bộ (Luật 91/2025 + Nghị định 356/2025: vị trí là dữ liệu nhạy cảm; hồ sơ DPIA nộp trong 60 ngày kể từ khi xử lý — luật sư xác nhận).
 - [ ] Legal: bản đồ chủ quyền, ảnh, dữ liệu vị trí.
+- [ ] **Dữ liệu transit trước khi cho người dùng thật thử:** có dữ liệu được phép dùng hoặc xác nhận bằng văn bản của nhà vận hành; nếu chưa, mọi giờ bus/metro hiện nhãn “ước tính” và biên bản thử ghi rõ giới hạn (điều kiện đã có ở `ADR-020` repo cũ).
+- [ ] Tile bản đồ: quyết định tự host hoặc nhà cung cấp có SLA (OpenFreeMap không có SLA; `ADR-025` repo cũ).
 - [ ] Route test ≥ 90% case; không lỗi one-way/chỉ dẫn sai nghiêm trọng.
 - [ ] Bike test: ≥ 10 route case OSM/OTP; không route vào đường cấm/không phù hợp xe đạp.
 - [ ] Admin CRUD + phân quyền test.
 - [ ] Saved places: lưu/bỏ lưu/mở lại; không mất khi restart.
 - [ ] Mobile build Android/iOS; UI/accessibility test.
 - [ ] 20–30 user thử; ≥ 70% hoàn thành luồng.
-- [ ] Showcase Web: nội dung/giá/policy được duyệt; không số liệu giả; VI/EN; SEO/accessibility cơ bản.
-- [ ] Coverage: TP.HCM route đủ 4 mode; ngoài TP.HCM hiện đúng `BEST_EFFORT`/`UNSUPPORTED`, không bịa route.
+- [ ] Showcase Web (6 trang R1): nội dung và policy được duyệt; không số liệu giả; VI/EN; SEO/accessibility cơ bản.
+- [ ] Coverage: TP.HCM route đủ 4 mode; ngoài TP.HCM trả đúng `UNSUPPORTED`, không bịa route (có test case “ngoài vùng phủ”).
 - [ ] Không P0; P1 có kế hoạch.
 
 ## R1.5 — Identity & Contributions
 
-- **Mục tiêu:** người dùng có tài khoản client và có thể đề xuất địa điểm; Admin duyệt trước khi publish.
+- **Mục tiêu:** người dùng có tài khoản client và có thể đề xuất địa điểm (chỉ chữ); Admin duyệt trước khi publish.
 - **Phải có:**
-  - Client account: email/password + Google; email verified (hoặc Google).
+  - Client account: email/password + Google; email verified (hoặc Google). **Xoá tài khoản trong app.** Nếu có Google Sign-In thì cân nhắc Sign in with Apple trước khi lên App Store (guideline 4.8; repo cũ `ADR-040`).
   - Đăng nhập/đăng ký/khôi phục; token Keychain/Keystore.
-  - Form đề xuất địa điểm (tên, category, vị trí, địa chỉ, mô tả, **1–3 ảnh optional**, đồng ý điều khoản).
-  - Trạng thái `pending/approved/rejected/merged/withdrawn`; “Đề xuất của tôi”.
-  - Admin queue: map preview, duplicate candidates, approve/reject/merge, audit.
+  - Form đề xuất địa điểm (tên, category, vị trí, địa chỉ, mô tả, đồng ý điều khoản); **không ảnh**.
+  - Trạng thái `pending/changes_requested/approved/rejected/merged/withdrawn`; “Đề xuất của tôi”.
+  - Admin queue: map preview, duplicate candidates, approve/reject/merge/request changes, suspend contributor, audit.
   - Rate limit theo account; anti-spam; duplicate check PostGIS.
-  - Ảnh: upload, strip EXIF, resize/thumb, duyệt từng ảnh; license/credit; lưu media.
-  - Legal: điều khoản đóng góp, privacy, content policy, ảnh.
-- **Không có:** ảnh bình luận, collection, community, OSM export, AI, Ads.
-- **Gate:** auth flow; submission + 1–3 ảnh → moderation → publish; duplicate/merge; photo reject/EXIF; rate limit; legal terms; 10 submission test.
+  - Legal: điều khoản đóng góp, privacy, content policy; **phân loại Nghị định 147** (tài khoản + nội dung người dùng + tên công khai) do luật sư xác nhận trước khi mở.
+- **Không có:** ảnh người dùng (R1.6), ảnh bình luận, collection, community, OSM export, AI, Ads.
+- **Gate:** auth flow; submission → moderation → publish; duplicate/merge; request changes; rate limit; legal terms + phân loại NĐ 147; 10 submission test.
+
+## R1.6 — Photo Contributions
+
+- **Điều kiện mở:** qua cổng pháp lý cho ảnh người dùng (bản quyền, quyền riêng tư/người trong ảnh, trách nhiệm nền tảng); checklist cũ xếp “ảnh người dùng” vào nhóm chặn mở tính năng (`../GoWander/docs/research/legal-compliance-checklist-2026-11-17.md`, §0.2 P2).
+- **Phải có:** 1–3 ảnh/đề xuất (optional, ≤ 5 MB, JPEG/PNG/WebP), pending, duyệt từng ảnh, strip EXIF, resize/thumb, license/credit, xoá khi place bị gỡ.
+- **Gate:** photo reject/EXIF test; license/credit hiển thị; legal xác nhận.
 
 ## R2 — Wander Mode (hero)
 
@@ -261,7 +273,7 @@ Discover → Wander Mode → Explore → Journey Memory → Community → Discov
 - **Mobile:** 2 app target; Business app dùng chung codebase, khác entry/navigation theo role.
 - **Web:** 3 khu vực; R1 dùng Admin + Showcase marketing; Client Web app/Partner Web sau.
 - **API:** `/api/v1`; module mới thêm path riêng, không phá contract cũ.
-- **Analytics:** event schema từ R1 để R6 đối soát.
+- **Analytics:** event schema từ R1 để R6 đối soát; chỉ bộ đếm gộp, không PII, không lưu sự kiện từng người (hướng của `ADR-038` repo cũ).
 - **Ads:** ad slot tách khỏi ranking; sponsored label bắt buộc.
 
 ## Đã chốt trong phiên 18-11-2026
@@ -271,8 +283,17 @@ Discover → Wander Mode → Explore → Journey Memory → Community → Discov
 - **Client guest-first**: không bắt buộc tài khoản; plan/saved places lưu trên máy.
 - Tên release: **R1 = Pilot Foundation**, **R1.5 = Identity & Contributions**, **R2 = Wander Mode**.
 - **Thêm địa điểm bắt buộc tài khoản**; lưu địa điểm guest-first; thêm địa điểm ở R1.5.
-- **Địa lý:** pilot sâu TP.HCM (metro + bus); map/discover toàn quốc; bus/metro vùng khác theo coverage, không hứa toàn quốc R1.
-- Account: email/password + Google, verify; rate limit 3/ngày; contributor hiện tên; **1–3 ảnh** khi đề xuất; comment text-only ở R4, ảnh comment sau.
+- **Địa lý:** pilot sâu TP.HCM (metro + bus + đi bộ + xe đạp); map/search toàn quốc; **mọi tìm tuyến ngoài TP.HCM mở sau**, không hứa trong R1.
+- Account: email/password + Google, verify; rate limit 3/ngày; contributor hiện tên; comment text-only ở R4, ảnh comment sau.
+
+## Đã chốt bổ sung — 18-11-2026 (rà soát nhất quán)
+
+- **ZH hoãn sau R1**: R1 chỉ VI/EN (app và Showcase).
+- **Showcase R1 thu gọn:** Home, Download, Contact (email), Privacy, Terms, Map/Data. About, Services, Pricing, Partners, FAQ, Cookies, Content, blog đều sau R1.
+- **Tìm tuyến ngoài TP.HCM: bỏ khỏi R1** (khớp graph và test của repo cũ).
+- **Admin Web giữ React + Vite** (ADR-0001).
+- **Vệ tinh: bỏ khỏi R1** (cần giấy phép nhà cung cấp; quyết định lại khi chọn được nhà cung cấp trả phí).
+- **Ảnh người dùng dời sang R1.6**, sau cổng pháp lý; R1.5 chỉ chữ.
 
 ## Câu hỏi mở
 
