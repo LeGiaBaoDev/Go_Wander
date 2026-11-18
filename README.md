@@ -62,7 +62,7 @@ Chưa có code. Khi docs được duyệt, code sẽ được thêm theo từng 
 - [ ] Duyệt vision/scope/principles/glossary.
 - [ ] Duyệt system context + containers.
 - [x] ADR-0001 web stack: React/Next/Vite.
-- [ ] ADR-0003 API/auth (ADR-0002: tài khoản và vai trò, Proposed).
+- [ ] Duyệt ADR-0002 (tài khoản/vai trò) + ADR-0003 API/auth/RBAC + ADR-0004 data/PostGIS + ADR-0005 tìm đường (đều Proposed, 18-11-2026).
 - [ ] R1.5: client account + place submissions (account required, chỉ chữ); R1.6: ảnh đóng góp sau cổng pháp lý.
 - [ ] Duyệt `docs/00-foundation/05-legacy-carryover.md` (kế thừa từ repo cũ).
 - [ ] R0.5: Figma design tokens + R1 screens + prototype before UI code.
