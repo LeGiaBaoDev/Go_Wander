@@ -28,6 +28,7 @@ README.md
     → 01-product/01-users.md
     → 01-product/02-feature-map.md
     → 01-product/04-showcase-web.md
+    → 01-product/06-saved-and-contributed-places.md
     → 02-architecture/01-system-context.md
     → 02-architecture/02-containers.md
     → 02-architecture/04-api-contract.md
@@ -77,6 +78,8 @@ Repo cũ: `../GoWander`.
 - [ ] Duyệt `02-architecture/02-containers.md` (đã viết).
 - [ ] Duyệt `01-product/04-showcase-web.md` (đã viết).
 - [ ] Duyệt `01-product/05-brand-ui-direction.md` (đã viết).
+- [ ] Duyệt `01-product/06-saved-and-contributed-places.md` (đã viết).
+- [ ] Làm Figma R0.5: tokens + màn R1 + prototype (trước UI code).
 - [ ] Viết `02-architecture/03-data-model.md` — chốt entity/ownership.
 - [x] `03-decisions/ADR-0001-web-stack.md` — đã chốt.
 - [ ] Viết `03-decisions/ADR-0002-api-auth.md` — API/auth.

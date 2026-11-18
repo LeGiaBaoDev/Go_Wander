@@ -64,14 +64,14 @@ Ghi chú:
 | Container | Tech | R1 | Trách nhiệm | Không làm |
 |---|---|---|---|---|
 | **Client Mobile** | KMP + Compose; MapLibre; Ktor client | ✅ | UI, map, route, discover, plan local, settings, language | Không nói chuyện DB/OTP; không chứa business logic server |
-| **Admin Web** | React + TS + Vite | ✅ | CRUD places/guide/feedback/media; editor; dashboard; RBAC | Không gọi DB/OTP trực tiếp |
+| **Admin Web** | React + TS + Vite | ✅ | CRUD places/guide/feedback/media; editor; dashboard; RBAC; **moderation queue R1.5** | Không gọi DB/OTP trực tiếp |
 | **Partner Web** | React + TS + Vite | ❌ R6 | Dashboard đối tác, khuyến mãi, ads/affiliate/booking | Không tự tính route/giá |
 | **Client Web** | Next.js + TS | ✅ marketing R1; app sau | Landing, SEO, services/pricing/policies, download; app sau | Không nhân bản API logic |
 | **Go API** | Go (chi/pgx) | ✅ | Auth, validate, route, discover, admin, media, weather proxy | Không render UI mobile; không lưu plan mặc định |
 | **PostgreSQL/PostGIS** | Postgres + PostGIS | ✅ | Place/category/guide/feedback/account/admin; geo queries | Không lưu plan cá nhân mặc định |
-| **OTP** | OpenTripPlanner | ✅ | Graph transit + OSM; tìm tuyến | Không lộ ra client |
+| **OTP** | OpenTripPlanner | ✅ | Graph TP.HCM (bus + Metro L1 + OSM); tìm tuyến; vùng khác sau | Không lộ ra client; không gộp graph toàn quốc |
 | **Photon/Vietmap** | Photon self-host / Vietmap API | ✅ | Geocoding/reverse | Không lưu query/PII |
-| **Media storage** | R2/S3 hoặc local dev | ✅ | Ảnh do Admin upload; credit/license | Không chứa secret |
+| **Media storage** | R2/S3 hoặc local dev | ✅ | Ảnh Admin; **ảnh đề xuất R1.5** (1–3, pending, strip EXIF); credit/license | Không chứa secret |
 | **Monitoring** | Log/metric/alert | ⏳ | Health, lỗi, latency, cảnh báo | Không log PII/token |
 | **Map tiles** | OpenFreeMap / Esri | ✅ | Tile bản đồ/vệ tinh | Không dùng tile không rõ license |
 
@@ -81,9 +81,9 @@ Ghi chú:
 
 | Module | R1 | Trách nhiệm |
 |---|---|---|
-| **Identity** | ✅ (Admin) | Đăng nhập Admin, session, RBAC; client account sau |
-| **Mobility** | ✅ | Route request/response, OTP adapter, `dataStatus` |
-| **Discover** | ✅ | Place/category/guide, PostGIS queries |
+| **Identity** | ✅ Admin; R1.5 client | Đăng nhập Admin, session, RBAC; client account + email/Google ở R1.5 |
+| **Mobility** | ✅ | Route request/response, OTP adapter, `dataStatus`; coverage TP.HCM R1 |
+| **Discover** | ✅ | Place/category/guide, PostGIS queries; place submissions + moderation ở R1.5 |
 | **Journey** | ⏳ R2 | Wander Mode, plan server-side (nếu cần), recommendations |
 | **Media** | ✅ | Upload/read ảnh, credit/license |
 | **Admin/Backoffice** | ✅ | API cho Admin Web, audit, feedback |
@@ -114,8 +114,11 @@ Ghi chú:
 |---|---|---|
 | Place/category/guide | DB | PostGIS; source/license |
 | Feedback | DB | Có thể chứa PII; retention |
+| Place submissions | DB | R1.5; account_id, status, moderation; không public khi pending |
+| Place submission photos | DB + media | R1.5; 1–3 ảnh, pending, EXIF stripped, credit; chỉ public khi duyệt |
+| Moderation audit | DB | R1.5; ai duyệt, khi nào, lý do |
 | Account/Admin | DB | Password hash; session/token |
-| Plan/saved places | Client Mobile | Local-first; không mặc định lên server |
+| Plan/saved places | Client Mobile | Local-first; saved places local ở R1; sync R3 |
 | Route/legs | API/OTP | Không lưu lâu; cache ngắn nếu cần |
 | Weather | API cache | Không lưu lịch sử |
 | Ảnh | Media storage | Credit/license |
@@ -128,7 +131,7 @@ Một máy/host hoặc docker compose:
   - reverse proxy (HTTPS)
   - Go API
   - PostgreSQL/PostGIS
-  - OTP
+  - OTP (graph TP.HCM)
   - Photon (hoặc Vietmap qua API)
   - static Admin Web
   - Client Web / Showcase (Next.js marketing)
@@ -161,6 +164,7 @@ Một máy/host hoặc docker compose:
 - Media R1: local hay R2 ngay?
 - Photon self-host hay Vietmap primary ngay R1?
 - OTP chạy cùng host hay container riêng?
+- Mở graph Hà Nội/Đà Nẵng khi nào? (sau R1, theo coverage)
 - Monitoring R1 tối thiểu: log + health hay thêm Prometheus?
 - Client Mobile có cần offline cache tile/route ở R1 không?
 - Showcase dùng MDX/JSON hay CMS ở R1? Domain nào?
