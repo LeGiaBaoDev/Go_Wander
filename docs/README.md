@@ -38,7 +38,7 @@ README.md
     → 06-research/README.md
 ```
 
-Các file sau **chưa viết** (xem “Việc cần viết tiếp”): `01-product/01-users.md`, `02-feature-map.md`, `02-architecture/03-data-model.md`, `04-api-contract.md`, `05-security-privacy.md`, `04-development/*`.
+Các file sau **chưa viết** (xem “Việc cần viết tiếp”): `01-product/01-users.md`, `02-feature-map.md`, `02-architecture/03-data-model.md`, `04-api-contract.md`, `05-security-privacy.md`.
 
 Khi code bắt đầu, `04-development/04-reading-order.md` sẽ mở rộng thành thứ tự đọc code (docs → backend → mobile → test).
 
@@ -93,7 +93,8 @@ Repo cũ: `../GoWander`.
 - [ ] Viết `02-architecture/03-data-model.md` — chốt entity/ownership.
 - [x] `03-decisions/ADR-0001-web-stack.md` — đã chốt.
 - [ ] Viết `03-decisions/ADR-0003-api-auth.md` — API/auth (ADR-0002 đã dùng cho mô hình tài khoản/vai trò).
-- [ ] Viết `04-development/01-toolchain.md`, `02-conventions.md`, `03-testing.md`, `04-reading-order.md`.
+- [x] Viết `04-development/01-toolchain.md`, `02-conventions.md`, `03-testing.md`, `04-reading-order.md`, `05-git-workflow.md` (Proposed, 18-11-2026).
+- [ ] Viết skill cho agent (chủ dự án làm) và duyệt `04-development/*` thành Accepted.
 - [x] `06-research/README.md` — mục lục nghiên cứu kế thừa từ repo cũ (chưa kiểm chứng lại).
 - [ ] Kiểm chứng lại license/status nguồn dữ liệu, rồi viết `06-research/01-data-sources.md`.
 - [ ] Nhờ luật sư rà checklist pháp lý (bản gốc: `../GoWander/docs/research/legal-compliance-checklist-2026-11-17.md`).
