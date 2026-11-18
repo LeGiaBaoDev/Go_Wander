@@ -8,7 +8,7 @@
 ## TL;DR
 
 - Toàn bộ màn hình R0.5 nằm trên **một canvas claude.ai (loại Design)**: <https://claude.ai/artifact/Wt2LzogXbLm7msPKHBaUjY> (riêng tư, chỉ chủ dự án mở được).
-- Ngày 18-11-2026 canvas có **136 màn trong 25 cụm**, mỗi cụm một hàng. Hàng đầu là **Sơ đồ màn hình** (`project/ScreenMap.dc.html`).
+- Ngày 18-11-2026, bản canvas xuất ra có **144 màn trong 25 cụm**, mỗi cụm một hàng. Hàng đầu là **Sơ đồ màn hình** (`project/ScreenMap.dc.html`). Bản export đầy đủ (source/static/assets/png) do chủ dự án giữ **ngoài repo**; repo chỉ giữ bản sao sơ đồ `07-screen-map.html` và các quy ước trong file này.
 - Bản sao của sơ đồ cho agent đọc trong repo: [`07-screen-map.html`](./07-screen-map.html). Khi canvas thay đổi, bản sao phải cập nhật trong cùng PR.
 - Canvas chỉ là **thiết kế**: số liệu là DEMO, nội dung địa điểm và câu chuyện là ví dụ, chưa kiểm chứng. Quyết định sản phẩm nằm trong docs, không nằm trên canvas.
 - Design System artifact riêng (<https://claude.ai/artifact/94b7v6RALKbTwBu887XGHt>) **vẫn dùng token blue cũ**, cần cập nhật sang v4.
@@ -16,6 +16,7 @@
 ## Cách agent đọc canvas
 
 - Mỗi màn là một file `project/<Tên>.dc.html` (HTML + CSS inline). Đọc bằng công cụ Artifact (`action: read`, `path: "project/<Tên>.dc.html"`), không dùng web fetch.
+- Nếu môi trường không có công cụ Artifact hoặc canvas riêng tư, dùng **bản export do chủ dự án giữ ngoài repo** (nếu có): `source/` cho bản gốc `.dc.html`, `static/` cho HTML mở bằng trình duyệt, `png/` để xem bằng mắt. Bản export là snapshot, có thể cũ; ảnh PNG có ô xám ở component lồng nhau (Gô, ảnh minh hoạ) — khi cần đầy đủ thì mở canvas.
 - `project/canvas.json` là chỉ mục: vị trí, cỡ, tiêu đề từng khung, tiêu đề cụm.
 - Liên kết giữa các màn là `<a href="X.dc.html">`; đi theo link để biết luồng.
 - Trước khi sửa một màn, **đọc lại bản mới nhất**: chủ dự án có thể sửa tay trên canvas.

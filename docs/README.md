@@ -92,7 +92,8 @@ Repo cũ: `../GoWander`.
 - [ ] Viết `02-architecture/04-api-contract.md` (kèm `dataStatus`, `UNSUPPORTED`), `05-security-privacy.md`.
 - [ ] Viết `02-architecture/03-data-model.md` — chốt entity/ownership.
 - [x] `03-decisions/ADR-0001-web-stack.md` — đã chốt.
-- [ ] Viết `03-decisions/ADR-0003-api-auth.md` — API/auth (ADR-0002 đã dùng cho mô hình tài khoản/vai trò).
+- [x] Viết `03-decisions/ADR-0003-api-contract-auth-rbac.md`, `ADR-0004-data-model-postgis.md`, `ADR-0005-routing-algorithm.md` (Proposed, 18-11-2026).
+- [ ] Duyệt ADR-0002/0003/0004/0005; chỉ chuyển Accepted khi chủ dự án chốt.
 - [x] Viết `04-development/01-toolchain.md`, `02-conventions.md`, `03-testing.md`, `04-reading-order.md`, `05-git-workflow.md` (Proposed, 18-11-2026).
 - [ ] Viết skill cho agent (chủ dự án làm) và duyệt `04-development/*` thành Accepted.
 - [x] `06-research/README.md` — mục lục nghiên cứu kế thừa từ repo cũ (chưa kiểm chứng lại).

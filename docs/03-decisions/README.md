@@ -22,9 +22,21 @@ ADR ghi lại **quyết định kiến trúc** và lý do. Một ADR đã Accept
 |---|---|---|---|
 | [ADR-0001](./ADR-0001-web-stack.md) | Web stack: React + TypeScript, Next.js cho Client Web, Vite cho Admin/Partner | Accepted | 18-11-2026 |
 | [ADR-0002](./ADR-0002-account-roles.md) | Một kiểu tài khoản, quyền theo vai trò ở từng quán; Admin cấp tài khoản quán | Proposed | 18-11-2026 |
-| ADR-0003 | API contract & auth (dự kiến) | Planned | — |
-| ADR-0004 | Data model & PostGIS (dự kiến) | Planned | — |
-| ADR-0005 | Thuật toán tìm đường (lọc đúng luật → đa tiêu chí → 4 nhánh), transit/OTP & dữ liệu giả định (dự kiến; bản giải thích: canvas `RouteLogic`) | Planned | — |
+| [ADR-0003](./ADR-0003-api-contract-auth-rbac.md) | Hợp đồng API, đăng nhập, phiên và RBAC | Proposed | 18-11-2026 |
+| [ADR-0004](./ADR-0004-data-model-postgis.md) | Mô hình dữ liệu PostgreSQL/PostGIS | Proposed | 18-11-2026 |
+| [ADR-0005](./ADR-0005-routing-algorithm.md) | Thuật toán tìm đường: lọc đúng luật, đa tiêu chí Pareto, bốn nhánh; OTP/RAPTOR/A*, transit/OSM giả định | Proposed | 18-11-2026 |
+
+> **ADR-0002 vẫn là Proposed.** Không đổi trạng thái sang Accepted cho tới khi chủ dự án chốt, đặc biệt điểm 4 (chủ quán tự mời nhân viên hay chỉ Admin cấp). ADR-0003 giả định hướng của ADR-0002; nếu ADR-0002 đổi, ADR-0003 phải được rà lại.
+
+### Quan hệ giữa các ADR
+
+| ADR | Phụ thuộc / liên quan | Ghi chú |
+|---|---|---|
+| ADR-0003 | ADR-0001, ADR-0002 | Hợp đồng API, realm xác thực, RBAC, OpenAPI |
+| ADR-0004 | ADR-0003 | Bảng account/session/RBAC, mô hình dữ liệu và PostGIS |
+| ADR-0005 | ADR-0003, ADR-0004 | Route API, coverage/graph metadata, thuật toán và nhãn dữ liệu |
+
+> Các ADR mới đang **Proposed**: chưa phải luật. Số liệu/thời hạn/trọng số trong đó là đề xuất, phần lớn gắn `ASSUMED`; chủ dự án chốt mới có hiệu lực.
 
 ## Quy ước
 
