@@ -108,10 +108,11 @@ Chi tiết sẽ nằm ở ADR-0005; bản giải thích hiện có ở canvas (`
 
 ## Tài khoản và quyền
 
-Theo ADR-0002: một kiểu tài khoản, quyền theo vai trò ở từng quán; Admin là tài khoản riêng, bắt buộc hai lớp.
+Theo ADR-0002: ba loại đăng nhập trong một app — cá nhân (khách), quán (Admin cấp; đăng nhập bằng mã nhân viên + mật khẩu riêng), Admin (tài khoản riêng, bắt buộc hai lớp).
 
 - Mọi endpoint ghi rõ vai trò được gọi; kiểm tra ở server, có test cho cả trường hợp bị từ chối.
 - Vai trò quán: Chủ quán / Quản lý / Nhân viên. Việc tiền (đối soát) chỉ Chủ quán.
+- Mã nhân viên chỉ định danh, **không dùng một mình để đăng nhập**; mật khẩu thành viên quán tối thiểu 6 ký tự/6 số (ADR-0002); cấp lại mật khẩu tạm 24 giờ, bắt đổi, audit.
 - Hành động nhạy cảm (khôi phục sao lưu, đổi quyền, duyệt hồ sơ đối tác) ghi nhật ký kiểm toán: ai, khi nào, làm gì.
 
 ## Bảo mật và riêng tư (tối thiểu)

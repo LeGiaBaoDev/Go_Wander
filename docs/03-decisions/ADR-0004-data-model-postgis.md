@@ -5,6 +5,8 @@
 - **Người quyết định:** chủ dự án (chờ chốt)
 - **Liên quan:** `ADR-0003-api-contract-auth-rbac.md`, `ADR-0002-account-roles.md`, `../02-architecture/01-system-context.md`, `../02-architecture/02-containers.md`, `../01-product/06-saved-and-contributed-places.md`, `../01-product/08-accounts-roles-partners.md`, `../01-product/09-stories-explore-search.md`
 
+> **Cập nhật 18-11-2026 (ADR-0002 viết lại):** `partner.shop_membership`, `staff_password_reset` và “một/nhiều owner” là **mô hình cũ**. Mô hình mới cần: `shop_account` (mã quán, `recovery_email`, `notify_email`; **không** có mật khẩu quán), `business`, `branch` (địa chỉ, giờ, khung đặt trước), `staff` (mã nhân viên `<mã>-<vai trò><số>`, vai trò, chi nhánh, mật khẩu riêng, trạng thái), `device_session` (nhiều thiết bị, đăng xuất từng máy), `booking` có trạng thái và **chỗ cho thanh toán** (giai đoạn 3, `../01-product/10-business-model.md`), nhật ký thao tác gắn mã nhân viên. Phần dưới cần viết lại theo đó. **Bổ sung 18-11-2026:** `booking.account_id` **bắt buộc** (không đặt vãng lai, không `guest`); bảng đếm `dish_order_daily` (branch, món, ngày, số lượt, chỉ đơn đã xác nhận/đã đến) cho “món đặt nhiều” theo tháng và nhãn “Hot”.
+
 ## Bối cảnh
 
 GoWander lưu nhiều loại dữ liệu có tính chất rất khác nhau:
@@ -48,7 +50,7 @@ Một database, các schema theo bounded context:
 | `catalog` | Discover | source, category, category_translation, place, place_translation, place_category, story, story_revision, story_translation, story_media, story_place, place_submission, place_submission_photo, place_duplicate_candidate |
 | `media` | Media | media, media_variant |
 | `mobility` | Mobility | coverage_area, transit_feed, graph_build, graph_build_feed, route_cache (chỉ khi cần) |
-| `partner` | Partner/Booking (phần quán) | shop, shop_membership, shop_invite, partner_application, application_document, document_access_log, menu_item, shop_booking_policy |
+| `partner` | Partner/Booking (phần quán) | shop, shop_membership, shop_invite, staff_password_reset, partner_application, application_document, document_access_log, menu_item, shop_booking_policy |
 | `booking` | Booking | booking, booking_item, booking_status_event, payment, refund |
 | `engagement` | Community/Feedback | feedback, notification, notification_delivery |
 | `backoffice` | Admin/Backoffice | audit_log, import_run, import_issue |
@@ -224,15 +226,17 @@ erDiagram
 
 **`partner.shop`**:
 
-- `id`, `place_id` (FK `catalog.place`, unique), `name`, `kind` (`food|cafe|stay|tour|other`), `status` (`pending|active|suspended|closed`), `plan` (`basic|pro` — DEMO, chưa chốt giá), `features jsonb` (booking, preorder, deposit), `created_at`, `updated_at`.
+- `id`, `code` (2–6 chữ cái in hoa, unique, không đổi sau khi cấp mã nhân viên), `place_id` (FK `catalog.place`, unique), `name`, `kind` (`food|cafe|stay|tour|other`), `status` (`pending|active|suspended|closed`), `plan` (`basic|pro` — DEMO, chưa chốt giá), `features jsonb` (booking, preorder, deposit), `next_employee_seq` (int, cấp phát trong transaction), `created_at`, `updated_at`.
 - `place_id` bắt buộc khi shop active; trước đó có thể null trong hồ sơ.
 - Không lưu toạ độ riêng nếu đã có place; nếu cần địa chỉ liên hệ thì dùng cột text.
 
 **`partner.shop_membership`**:
 
-- `shop_id`, `account_id`, `role` (`owner|manager|staff`), `status` (`invited|active|revoked`), `invited_by`, `joined_at`.
-- Unique (shop_id, account_id) cho membership active; partial unique **một owner active** trên mỗi shop.
-- `shop_invite`: id, shop_id, email/phone, role, token_hash, expires_at, accepted_at, created_by. Token một lần, hết hạn 48 giờ (đề xuất).
+- `shop_id`, `account_id`, `role` (`owner|manager|staff`), `status` (`invited|active|suspended|revoked`), `employee_code` (text; unique trong quán), `employee_seq` (int; unique trong quán, không tái sử dụng), `invited_by`, `joined_at`, `revoked_at`.
+- Mã nhân viên format `<shop.code>-<role_prefix><seq>`; prefix chỉ là lịch sử cấp, **không dùng để suy quyền**; quyền theo `role` hiện tại.
+- Unique (shop_id, account_id) cho membership active; **R1 partial unique một owner active**; **R7 bỏ partial unique, cho nhiều owner**, nhưng application/service phải bảo đảm còn ít nhất một owner active.
+- `shop_invite`: id, shop_id, email/phone, role, token_hash, expires_at, accepted_at, revoked_at, created_by. Token một lần, **hết hạn 7 ngày** (ADR-0002).
+- `staff_password_reset`: id, shop_id, account_id, issued_by, temp_password_hash, expires_at, used_at, must_change, created_at. Chỉ lưu hash mật khẩu tạm; hết hạn 24 giờ; dùng một lần; audit khi tạo/dùng.
 
 **`partner.partner_application`**:
 
@@ -436,7 +440,9 @@ erDiagram
 - [ ] Chốt công cụ migration/version PostgreSQL ở `../04-development/01-toolchain.md` (bước scaffold).
 - [ ] Rà ODbL/CC BY-SA và retention với luật sư trước khi publish dữ liệu/ảnh.
 - [ ] Thiết kế job xoá/anonymize account, document, feedback; ghi bằng chứng chạy thử.
-- [ ] Khi làm R1.5: bổ sung submission/photo; R6: shop/membership; R7: booking/payment.
+- [ ] Khi làm R1.5: bổ sung submission/photo; R6: shop/membership, `shop.code`, `employee_code`/`employee_seq`, `shop_invite` 7 ngày; R7: booking/payment và máy quán.
+- [ ] Test cấp mã nhân viên không trùng/không tái sử dụng; test reset mật khẩu tạm 24 giờ, một lần, bắt đổi, audit.
+- [ ] Rà `staff_password_reset` với chính sách mật khẩu 6+ của thành viên quán (ADR-0002/0003).
 
 ## Tham khảo
 

@@ -28,7 +28,7 @@ Danh sách giấy tờ đăng ký hợp tác ở `../01-product/08-accounts-role
 - Lưu trú: điều kiện an ninh, trật tự theo NĐ 96/2016/NĐ-CP.
 - Lữ hành: Luật Du lịch 2017.
 - Dữ liệu cá nhân trong hồ sơ: Luật 91/2025/QH15 và NĐ 356/2025/NĐ-CP (theo checklist cũ, thay NĐ 13/2023 từ 01-01-2026).
-- Nếu GoWander thu cọc hộ quán: có thể là sàn TMĐT, phải đăng ký với Bộ Công Thương (NĐ 52/2013, sửa bởi NĐ 85/2021). **Phải hỏi luật sư trước khi bật.**
+- Nếu GoWander thu tiền hộ quán (thanh toán trong app, **giai đoạn 3**; giai đoạn 1 không thu tiền, xem `../01-product/10-business-model.md`): có thể là sàn TMĐT, phải đăng ký với Bộ Công Thương (NĐ 52/2013, sửa bởi NĐ 85/2021). **Phải hỏi luật sư trước khi bật.**
 
 ## Phí đối tác (cần nghiên cứu, thêm 18-11-2026)
 
@@ -36,8 +36,8 @@ Chủ dự án chưa chốt có thu phí đăng ký / phí tháng / phí % hay k
 
 - [ ] Khảo sát phí của các nền tảng đặt bàn và giao đồ ăn đang chạy ở TP.HCM (ghi nguồn, ngày xem).
 - [ ] Ước chi phí mỗi quán: SMS/OTP, email, phí cổng thanh toán, hỗ trợ, lưu giấy tờ.
-- [ ] Hỏi luật sư/kế toán: phí % trên cọc có làm GoWander thành sàn TMĐT không; nghĩa vụ hoá đơn khi thu phí tháng.
-- [ ] So sánh 4 hướng: (A) miễn phí đăng ký + Cơ bản 0 ₫ + Pro trả tháng + % trên cọc; (B) chỉ %; (C) chỉ phí tháng; (D) con số do chủ dự án đặt.
+- [ ] Hỏi luật sư/kế toán: hoa hồng % trên đơn trả trong app có làm GoWander thành sàn TMĐT không; nghĩa vụ hoá đơn khi thu phí tháng (giai đoạn 2).
+- [ ] So sánh 4 hướng: (A) miễn phí đăng ký + Cơ bản 0 ₫ + Pro trả tháng + hoa hồng % khi mở giai đoạn 3; (B) chỉ %; (C) chỉ phí tháng; (D) con số do chủ dự án đặt.
 
 ## Nguồn dữ liệu
 

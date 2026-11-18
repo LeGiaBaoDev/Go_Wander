@@ -32,6 +32,7 @@ README.md
     → 01-product/07-design-canvas.md (+ 07-screen-map.html)
     → 01-product/08-accounts-roles-partners.md
     → 01-product/09-stories-explore-search.md
+    → 01-product/10-business-model.md
     → 02-architecture/01-system-context.md
     → 02-architecture/02-containers.md
     → 03-decisions/README.md (đọc các ADR đã Accepted)
@@ -85,15 +86,15 @@ Repo cũ: `../GoWander`.
 - [ ] Duyệt `01-product/06-saved-and-contributed-places.md` (đã viết).
 - [ ] Duyệt `00-foundation/05-legacy-carryover.md` (bảng kế thừa từ repo cũ).
 - [x] Vẽ R0.5 trên canvas claude.ai (135 màn, mọi phase) — xem `01-product/07-design-canvas.md`; chờ chủ dự án duyệt.
-- [ ] Duyệt `01-product/07-design-canvas.md`, `08-accounts-roles-partners.md`, `09-stories-explore-search.md`, ADR-0002.
+- [ ] Duyệt `01-product/07-design-canvas.md`, `08-accounts-roles-partners.md`, `09-stories-explore-search.md`.
 - [ ] Cập nhật Design System artifact sang palette v4.
-- [ ] Luật sư rà giấy tờ đăng ký hợp tác và nghĩa vụ TMĐT (trước khi bật thu cọc).
+- [ ] Luật sư rà giấy tờ đăng ký hợp tác và nghĩa vụ TMĐT (trước khi bật thanh toán trong app ở giai đoạn 3).
 - [ ] Viết `01-product/01-users.md`, `02-feature-map.md`.
 - [ ] Viết `02-architecture/04-api-contract.md` (kèm `dataStatus`, `UNSUPPORTED`), `05-security-privacy.md`.
 - [ ] Viết `02-architecture/03-data-model.md` — chốt entity/ownership.
 - [x] `03-decisions/ADR-0001-web-stack.md` — đã chốt.
 - [x] Viết `03-decisions/ADR-0003-api-contract-auth-rbac.md`, `ADR-0004-data-model-postgis.md`, `ADR-0005-routing-algorithm.md` (Proposed, 18-11-2026).
-- [ ] Duyệt ADR-0002/0003/0004/0005; chỉ chuyển Accepted khi chủ dự án chốt.
+- [x] ADR-0002 Accepted cho R1 (18-11-2026); [ ] duyệt ADR-0003/0004/0005 (vẫn Proposed).
 - [x] Viết `04-development/01-toolchain.md`, `02-conventions.md`, `03-testing.md`, `04-reading-order.md`, `05-git-workflow.md` (Proposed, 18-11-2026).
 - [ ] Viết skill cho agent (chủ dự án làm) và duyệt `04-development/*` thành Accepted.
 - [x] `06-research/README.md` — mục lục nghiên cứu kế thừa từ repo cũ (chưa kiểm chứng lại).

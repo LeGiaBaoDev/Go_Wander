@@ -99,7 +99,7 @@ Discover → Wander Mode → Explore → Journey Memory → Community → Discov
 | AI Beta | AI Travel Companion có giới hạn | R5 |
 | Business Beta | Partner Web, Ads, Affiliate, Analytics | R6 |
 | Booking | External → Partner API → deep integration | R7 |
-| Expansion | Địa lý, cá nhân hóa (chế độ quán thay Business Mobile, ở R7) | R8 |
+| Expansion | Địa lý, cá nhân hóa (giao diện quán trong app thay Business Mobile, ở R7) | R8 |
 
 ## Nguyên tắc xuyên suốt
 
@@ -126,9 +126,9 @@ Discover → Wander Mode → Explore → Journey Memory → Community → Discov
 | **R3** | **Retention** | Người dùng quay lại và lưu kỷ niệm | Journey Memory; Storybook; lưu/mở lại; chia sẻ riêng tư | Community đầy đủ, AI | Retention test |
 | **R4** | **Community Beta** | Nội dung người dùng và vòng lặp xã hội | Post, Follow, Comment, Post-to-Journey, moderation | Ads, Booking | Legal + moderation gate |
 | **R5** | **AI Beta** | AI hỗ trợ lập kế hoạch có kiểm soát | AI Companion; nguồn dữ liệu giới hạn; cost cap; eval | Community mở rộng, Booking | Eval + cost gate |
-| **R6** | **Business Beta** | Doanh thu và đối tác | Partner Web; Ads; Affiliate; analytics; đối soát | Booking sâu | Partner + ad policy gate |
-| **R7** | **Booking** | Đặt dịch vụ | Đặt bàn + đặt món trước tuỳ chọn + cọc theo chính sách quán; chế độ quán trong app (xem `../01-product/08-accounts-roles-partners.md`) | — | Hợp đồng + pháp lý (TMĐT nếu thu cọc hộ) |
-| **R8** | **Expansion** | Mở rộng | Địa lý; cá nhân hóa nâng cao (Business Mobile riêng bỏ, thay bằng chế độ quán ở R7 — ADR-0002) | — | Gate theo thị trường |
+| **R6** | **Business Beta** | Doanh thu và đối tác | Partner Web; Ads; Affiliate; analytics; đối chiếu đơn theo ca (chưa có tiền) | Booking sâu | Partner + ad policy gate |
+| **R7** | **Booking** | Đặt dịch vụ | Đặt trước **không thu tiền** (giai đoạn 1) + món đặt trước; giao diện quán trong app (xem `../01-product/08-accounts-roles-partners.md`); cọc/thanh toán để giai đoạn 3 | — | Hợp đồng + pháp lý (TMĐT nếu thu cọc hộ ở giai đoạn 3) |
+| **R8** | **Expansion** | Mở rộng | Địa lý; cá nhân hóa nâng cao (Business Mobile riêng bỏ, thay bằng giao diện quán trong app ở R7 — ADR-0002) | — | Gate theo thị trường |
 
 ## R0.5 — Design gate (Figma)
 
@@ -302,15 +302,16 @@ Discover → Wander Mode → Explore → Journey Memory → Community → Discov
 - **Palette v4 teal** thay Sexy Blue; linh vật **Gô**; có **chế độ tối** cho app (`../01-product/05-brand-ui-direction.md`).
 - **App có bản iPad** (ngang); web Admin/Partner/đăng ký hợp tác phải dùng được ở iPad và điện thoại.
 - **Câu chuyện** (khu lịch sử, công trình) có audio Gô đọc và video; Admin soạn bằng editor theo khối; media bắt buộc ghi giấy phép. **Khám phá Việt Nam** có Hoàng Sa, Trường Sa. **Tìm theo loại** (quán ăn, bệnh viện…) hiện ghim + danh sách (`../01-product/09-stories-explore-search.md`).
-- **Tài khoản:** một kiểu tài khoản, quyền theo vai trò ở từng quán; Admin là tài khoản riêng, Owner cấp, bắt buộc 2 lớp; quên mật khẩu qua email (SMTP) hoặc SMS (ADR-0002, `../01-product/08-accounts-roles-partners.md`).
-- **Partner:** không đăng ký tự do; nộp **hồ sơ hợp tác kèm giấy tờ**, duyệt 1–3 ngày làm việc, báo qua email; **Admin cấp tài khoản chủ quán**.
-- **Booking (R7):** đặt bàn + **đặt món trước tuỳ chọn (tên + giá)** + cọc theo chính sách quán; thực đơn/dịch vụ có thêm, sửa, xoá.
+- **Tài khoản (cập nhật 18-11-2026, ADR-0002):** ba loại đăng nhập trong một app: **cá nhân** (khách), **quán** (Admin cấp sau khi duyệt hồ sơ), **Admin** (riêng, Owner cấp, 2 lớp). Email của quán chỉ để khôi phục mật khẩu và xác định tài khoản thuộc về ai, không dùng đăng nhập (`../01-product/08-accounts-roles-partners.md`).
+- **Partner:** không đăng ký tự do; nộp **hồ sơ hợp tác kèm giấy tờ**, duyệt 1–3 ngày làm việc, báo qua email; **Admin cấp tài khoản quán** (mã Chủ quán `LL-CQ001` + liên kết đặt mật khẩu một lần gửi email đăng ký).
+- **Quyền quán (18-11-2026, ADR-0002):** đăng nhập bằng **mã nhân viên** (chứa mã quán) + **mật khẩu riêng**, không có mật khẩu quán; thiết bị mới gửi email báo Chủ quán; nhiều thiết bị cùng lúc; nhiều chi nhánh; **Chủ quán thấy đủ tab và tự CRUD nhân viên**; Quản lý/Nhân viên theo chi nhánh; Admin toàn quyền.
+- **Đặt trước (cập nhật 18-11-2026):** giai đoạn 1 **không thu tiền**, xác nhận qua email, món đặt trước (tên, giá, ảnh bắt buộc); doanh thu từ **affiliate**. Gói theo tháng (giai đoạn 2) và hoa hồng thanh toán trong app (giai đoạn 3) theo `../01-product/10-business-model.md`; cọc/hoàn cọc/đối soát đã vẽ được giữ cho giai đoạn 3.
 - **Admin:** có Tài chính (doanh thu, chi phí, lợi nhuận), Trung tâm thông báo, Phản hồi từ app, quản lý đối tác; số trong bản vẽ là DEMO.
 - **Lựa chọn dài → dropdown/nhóm**; thanh bên Admin gom nhóm.
 
 ## Câu hỏi mở
 
-0. Chưa chốt: mời nhân viên quán do chủ quán (đang vẽ) hay chỉ Admin cấp; câu chuyện/audio/video có ở R1 không; có thu cọc qua GoWander không (pháp lý TMĐT).
+0. Chưa chốt: câu chuyện/audio/video có ở R1 không; thanh toán trong app và hoa hồng (giai đoạn 3) khi nào mở (pháp lý TMĐT; xem `../01-product/10-business-model.md`).
 1. AI provider/chi phí: chưa chốt; R5 mới làm.
 2. Community: có cần cho pilot không? (đề xuất không)
 3. Booking: đối tác nào? (R7)
@@ -327,5 +328,5 @@ Discover → Wander Mode → Explore → Journey Memory → Community → Discov
 - [ ] Duyệt `01-product/04-showcase-web.md` (đã viết).
 - [x] ADR-0001 web stack — đã chốt.
 - [ ] Viết ADR-0003 API/auth + API contract v0.
-- [ ] Chốt ADR-0002 (tài khoản và vai trò).
+- [x] Chốt ADR-0002 (tài khoản và vai trò).
 - [ ] Lập data/legal risk register cho R1.

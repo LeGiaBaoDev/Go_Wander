@@ -97,7 +97,7 @@ Tỉ lệ tương phản tính bằng công thức WCAG 2.x (script Python, 18-1
 
 ## Điều hướng và lựa chọn dài
 
-- **App (điện thoại):** thanh dưới dạng viên thuốc, **chỉ icon**: Bản đồ, Khám phá, nút Tìm tuyến nổi ở giữa, Kế hoạch, Đã lưu, **⋯**. Mục đang mở có nền `--accent-soft`. Tên mục vẫn có cho trình đọc màn hình (`aria-label` + chữ ẩn). Bấm **⋯** → **xổ ra bảng điều hướng** có tên đầy đủ, nhóm Chính / Khám phá thêm (Câu chuyện, Khám phá Việt Nam, Tìm theo loại) / Của tôi (Thông báo, Đặt bàn của tôi, Quán của tôi, Hồ sơ). Màn: `NavMenu`.
+- **App (điện thoại):** thanh dưới dạng viên thuốc, **chỉ icon**: Bản đồ, Khám phá, nút Tìm tuyến nổi ở giữa, Kế hoạch, Đã lưu, **⋯**. Mục đang mở có nền `--accent-soft`. Tên mục vẫn có cho trình đọc màn hình (`aria-label` + chữ ẩn). Bấm **⋯** → **xổ ra bảng điều hướng** có tên đầy đủ, nhóm Chính / Khám phá thêm (Câu chuyện, Khám phá Việt Nam, Tìm theo loại) / Của tôi (Thông báo, Đặt bàn của tôi, Đăng nhập quán, Hồ sơ). Màn: `NavMenu`.
   - *Đánh đổi:* icon không chữ khó hiểu hơn với người mới; onboarding nên giới thiệu thanh này một lần.
 - **Admin:** thanh bên 5 nhóm: Tổng quan, Tài chính, Nội dung ▸, Partner ▸, Hệ thống ▸; mục con mở bằng flyout. Không để thanh bên dài quá ~6 mục.
 - **Partner web:** thanh bên chia nhóm (Vận hành / Thiết lập / Tiền) + ô chọn quán.
