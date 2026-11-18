@@ -99,7 +99,7 @@ Discover → Wander Mode → Explore → Journey Memory → Community → Discov
 | AI Beta | AI Travel Companion có giới hạn | R5 |
 | Business Beta | Partner Web, Ads, Affiliate, Analytics | R6 |
 | Booking | External → Partner API → deep integration | R7 |
-| Expansion | Business Mobile, địa lý, cá nhân hóa | R8 |
+| Expansion | Địa lý, cá nhân hóa (chế độ quán thay Business Mobile, ở R7) | R8 |
 
 ## Nguyên tắc xuyên suốt
 
@@ -118,7 +118,7 @@ Discover → Wander Mode → Explore → Journey Memory → Community → Discov
 | Release | Tên | Mục tiêu | Phải có | Không có trong release | Gate |
 |---|---|---|---|---|---|
 | **R0** | Docs & Architecture | Chốt lại dự án trước khi code | Vision, scope, principles, ADR stack, API contract v0, data/legal risk register | Code sản phẩm | Docs được duyệt |
-| **R0.5** | **Design gate** | Figma trước khi code UI | Design tokens (Sexy Blue), components, màn R1 (Client/Admin/Showcase), prototype, accessibility | Màn R2/R4, AI, booking | Figma + prototype được duyệt; dev feasible |
+| **R0.5** | **Design gate** | Thiết kế trước khi code UI | Palette v4 teal, components, **màn mọi phase R1→R7** trên canvas (app điện thoại + iPad, Admin, Partner, Showcase), responsive, accessibility | — | Canvas + docs được duyệt; dev feasible |
 | **R1** | **Pilot Foundation** | Người dùng đầu tiên khám phá và đi lại có giá trị | Client Mobile + Admin Web + Showcase Web (marketing); map; discover/guide; walk/bus/metro/bicycle; plan cá nhân cơ bản; **lưu địa điểm local**; VI/EN; dữ liệu + test | Community, AI, Ads, Affiliate, Booking, Partner Web, Business Mobile, Client Web app, **thêm địa điểm** | 20–30 user thử; route/admin/UI test; không P0 |
 | **R1.5** | **Identity & Contributions** | Người dùng có tài khoản và đóng góp địa điểm (chỉ chữ) có kiểm duyệt | Client account (email/password + Google, verified; xoá tài khoản trong app); form đề xuất địa điểm **không ảnh**; Admin queue; trạng thái submission; audit | **Ảnh người dùng**, ảnh bình luận, collections, community, OSM export, AI, Ads | Auth + moderation + duplicate test; legal terms; phân loại Nghị định 147 + DPIA đã được luật sư xác nhận |
 | **R1.6** | **Photo Contributions** | Cho phép ảnh đóng góp sau khi qua cổng pháp lý | 1–3 ảnh/đề xuất; duyệt từng ảnh; strip EXIF; license/credit | Ảnh bình luận, community | Cổng pháp lý ảnh người dùng (bản quyền, quyền riêng tư, Nghị định 147); photo/EXIF test |
@@ -127,10 +127,12 @@ Discover → Wander Mode → Explore → Journey Memory → Community → Discov
 | **R4** | **Community Beta** | Nội dung người dùng và vòng lặp xã hội | Post, Follow, Comment, Post-to-Journey, moderation | Ads, Booking | Legal + moderation gate |
 | **R5** | **AI Beta** | AI hỗ trợ lập kế hoạch có kiểm soát | AI Companion; nguồn dữ liệu giới hạn; cost cap; eval | Community mở rộng, Booking | Eval + cost gate |
 | **R6** | **Business Beta** | Doanh thu và đối tác | Partner Web; Ads; Affiliate; analytics; đối soát | Booking sâu | Partner + ad policy gate |
-| **R7** | **Booking** | Đặt dịch vụ | External booking → Partner API → tích hợp sâu | — | Hợp đồng + pháp lý |
-| **R8** | **Expansion** | Mở rộng | Business Mobile; địa lý; cá nhân hóa nâng cao | — | Gate theo thị trường |
+| **R7** | **Booking** | Đặt dịch vụ | Đặt bàn + đặt món trước tuỳ chọn + cọc theo chính sách quán; chế độ quán trong app (xem `../01-product/08-accounts-roles-partners.md`) | — | Hợp đồng + pháp lý (TMĐT nếu thu cọc hộ) |
+| **R8** | **Expansion** | Mở rộng | Địa lý; cá nhân hóa nâng cao (Business Mobile riêng bỏ, thay bằng chế độ quán ở R7 — ADR-0002) | — | Gate theo thị trường |
 
 ## R0.5 — Design gate (Figma)
+
+> **Cập nhật 18-11-2026:** chủ dự án quyết định **thiết kế mọi phase R1→R7 ngay ở R0.5** (kể cả mọi trạng thái: splash, đang tải, lỗi, sheet/form, tính năng “sắp có” làm mờ, Face ID, bong bóng góp ý), vẽ trên **canvas claude.ai** thay cho Figma. Canvas, cụm màn và cách agent đọc: `../01-product/07-design-canvas.md`; sơ đồ màn hình: `../01-product/07-screen-map.html`. Các mục “Phải có / Không có” dưới đây là bản đầu (chỉ R1), giữ để lưu vết; phạm vi vẽ hiện tại rộng hơn.
 
 - **Mục tiêu:** chốt giao diện R1 trong Figma trước khi viết UI code.
 - **Phải có:**
@@ -264,7 +266,7 @@ Discover → Wander Mode → Explore → Journey Memory → Community → Discov
 - **R5 AI Beta:** AI companion giới hạn nguồn (place/route/guide/weather), cost cap, eval, log; không open web.
 - **R6 Business Beta:** Partner Web, Ads có nhãn, Affiliate, analytics/đối soát; ranking tự nhiên tách khỏi ads.
 - **R7 Booking:** external link → partner API → deep integration; hợp đồng/pháp lý trước.
-- **R8 Expansion:** Business Mobile, mở rộng địa lý, cá nhân hóa nâng cao.
+- **R8 Expansion:** mở rộng địa lý, cá nhân hóa nâng cao (Business Mobile riêng bỏ — ADR-0002).
 
 ## Seam kiến trúc cho các phase sau
 
@@ -295,8 +297,20 @@ Discover → Wander Mode → Explore → Journey Memory → Community → Discov
 - **Vệ tinh: bỏ khỏi R1** (cần giấy phép nhà cung cấp; quyết định lại khi chọn được nhà cung cấp trả phí).
 - **Ảnh người dùng dời sang R1.6**, sau cổng pháp lý; R1.5 chỉ chữ.
 
+## Đã chốt bổ sung — 18-11-2026 (design gate trên canvas)
+
+- **Palette v4 teal** thay Sexy Blue; linh vật **Gô**; có **chế độ tối** cho app (`../01-product/05-brand-ui-direction.md`).
+- **App có bản iPad** (ngang); web Admin/Partner/đăng ký hợp tác phải dùng được ở iPad và điện thoại.
+- **Câu chuyện** (khu lịch sử, công trình) có audio Gô đọc và video; Admin soạn bằng editor theo khối; media bắt buộc ghi giấy phép. **Khám phá Việt Nam** có Hoàng Sa, Trường Sa. **Tìm theo loại** (quán ăn, bệnh viện…) hiện ghim + danh sách (`../01-product/09-stories-explore-search.md`).
+- **Tài khoản:** một kiểu tài khoản, quyền theo vai trò ở từng quán; Admin là tài khoản riêng, Owner cấp, bắt buộc 2 lớp; quên mật khẩu qua email (SMTP) hoặc SMS (ADR-0002, `../01-product/08-accounts-roles-partners.md`).
+- **Partner:** không đăng ký tự do; nộp **hồ sơ hợp tác kèm giấy tờ**, duyệt 1–3 ngày làm việc, báo qua email; **Admin cấp tài khoản chủ quán**.
+- **Booking (R7):** đặt bàn + **đặt món trước tuỳ chọn (tên + giá)** + cọc theo chính sách quán; thực đơn/dịch vụ có thêm, sửa, xoá.
+- **Admin:** có Tài chính (doanh thu, chi phí, lợi nhuận), Trung tâm thông báo, Phản hồi từ app, quản lý đối tác; số trong bản vẽ là DEMO.
+- **Lựa chọn dài → dropdown/nhóm**; thanh bên Admin gom nhóm.
+
 ## Câu hỏi mở
 
+0. Chưa chốt: mời nhân viên quán do chủ quán (đang vẽ) hay chỉ Admin cấp; câu chuyện/audio/video có ở R1 không; có thu cọc qua GoWander không (pháp lý TMĐT).
 1. AI provider/chi phí: chưa chốt; R5 mới làm.
 2. Community: có cần cho pilot không? (đề xuất không)
 3. Booking: đối tác nào? (R7)
@@ -312,5 +326,6 @@ Discover → Wander Mode → Explore → Journey Memory → Community → Discov
 - [ ] Duyệt `02-architecture/02-containers.md` (đã viết).
 - [ ] Duyệt `01-product/04-showcase-web.md` (đã viết).
 - [x] ADR-0001 web stack — đã chốt.
-- [ ] Viết ADR-0002 API/auth + API contract v0.
+- [ ] Viết ADR-0003 API/auth + API contract v0.
+- [ ] Chốt ADR-0002 (tài khoản và vai trò).
 - [ ] Lập data/legal risk register cho R1.

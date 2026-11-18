@@ -1,209 +1,141 @@
 # 05 — Brand & UI Direction
 
-- **Trạng thái:** Draft
+- **Trạng thái:** Proposed (palette v4, chờ chủ dự án duyệt trên canvas)
 - **Ngày:** 18-11-2026
 - **Chủ sở hữu:** chủ dự án
-- **Liên quan:** `04-showcase-web.md`, `../03-decisions/ADR-0001-web-stack.md`, `../00-foundation/01-vision.md`
+- **Liên quan:** `07-design-canvas.md`, `04-showcase-web.md`, `../03-decisions/ADR-0001-web-stack.md`, `../00-foundation/02-scope.md` (R0.5)
 
 ## TL;DR
 
-Hướng thị giác: **sáng, thoáng, đáng tin, có chiều sâu**.
+- **Nền trắng là chính**, chữ gần đen `#0F1E24`, **một màu nhấn duy nhất: teal `#19C4B0`**.
+- Nút chính: nền teal, **chữ tối** (7.77:1). **Không bao giờ chữ trắng trên teal** (2.2:1).
+- Link/chữ teal dùng `#08766B` (5.51:1 trên trắng).
+- Màu khác chỉ để báo trạng thái (thành công, cảnh báo, lỗi, thông tin). Màu tuyến bus/metro chỉ dùng trên chip tuyến.
+- Linh vật **Gô** (robot hộp kiểu xe buýt mini) xuất hiện ở trạng thái trống, onboarding, loa đọc chỉ dẫn.
+- Có **chế độ tối** cho app (Sáng / Tối / Theo máy).
+- Thiết kế mọi phase (R1→R7) ngay ở R0.5 để phase sau không phải vẽ lại; xem `07-design-canvas.md`.
 
-- Nền sáng/warm white; chữ navy đậm.
-- Màu chính: **Sexy Blue** (xanh dương rực, gradient); màu nhấn nhỏ: **orange** (tùy chọn).
-- **3D hero** (bản đồ/địa danh/phương tiện) + floating cards.
-- Bo góc lớn, bóng mềm, nhiều khoảng trắng.
-- Typography đậm, rõ; VI/EN dùng Be Vietnam Pro (ZH hoãn sau R1).
-- 3D chỉ ở hero/section chính; không dùng khắp nơi, không làm nặng trang.
+> **Lịch sử:** bản đầu ngày 18-11-2026 dùng “Sexy Blue” (`#007BFF`, `#0062E0`, cam nhấn). Chủ dự án đổi sang palette v4 teal trong cùng ngày sau nhiều vòng thử trên canvas. Các token blue cũ không còn dùng.
 
-## Ảnh tham khảo — lấy gì, bỏ gì
+## Palette v4
 
-> **Chưa kiểm chứng được:** 6 ảnh mẫu dưới đây chưa nằm trong repo (`docs/evidence/` chưa có). Cần lưu ảnh (hoặc link nguồn) trước khi duyệt hướng thiết kế. Ghi chú “app có dark” ở câu hỏi mở chưa khớp phạm vi R0.5 (chưa có token dark).
+Tỉ lệ tương phản tính bằng công thức WCAG 2.x (script Python, 18-11-2026).
 
-| Mẫu | Lấy | Không lấy |
+| Token | Hex | Dùng cho | Tương phản |
+|---|---|---|---|
+| `--ink` | `#0F1E24` | Chữ chính, heading, chữ trên nút teal, nền thanh điều hướng tối | 17.05 trên trắng; 7.77 trên teal |
+| `--body` | `#374549` | Chữ thân | 9.95 trên trắng |
+| `--muted` | `#5F6E73` | Chữ phụ, nhãn nhỏ | 5.30 trên trắng; 4.83 trên `--bg` |
+| `--accent` | `#19C4B0` | Nền nút chính, tab đang chọn, đường tuyến, chấm vị trí | — (không đặt chữ trắng: 2.2) |
+| `--accent-text` | `#08766B` | Link, chữ teal | 5.51 trên trắng |
+| `--accent-soft` | `#E3F9F5` | Nền chip, icon tile, hàng đang chọn | — |
+| `--bg` | `#F2F5F4` | Nền trang web/admin | — |
+| `--surface` | `#FFFFFF` | Card, nền app | — |
+| `--line` | `#E6EAEC` / `#D5DCDE` | Viền, đường chia / viền input | — |
+| `--success` | `#0F766E` trên `#E3FAEA` | Trạng thái tốt | 4.99 |
+| `--warn` | `#7A4E0E` trên `#FFF4D6` | Cảnh báo, “Giờ ước tính” | 6.55 |
+| `--error` | `#B42318` trên `#FDECEC` | Lỗi, xoá | 5.76 |
+| `--info` | `#0B5F8F` trên `#E3F1FA` | Thông tin | 5.98 |
+
+### Chế độ tối (app)
+
+| Token | Hex | Tương phản |
 |---|---|---|
-| **1. Mobile travel app** (xanh/tím, núi, route card) | Cảm giác “travel”, card tuyến, illustration mềm | Màu tím làm màu chính; bố cục mobile |
-| **2. Map/ad marketplace** (xanh đậm, map + panel) | Map làm hero, panel nổi, cảm giác SaaS chuyên nghiệp | Quá nhiều panel/filter; màu xanh rêu đậm đặc |
-| **3. Air quality dashboard** (mint/teal, floating data) | Card dữ liệu nổi trên map, khoảng trắng | Mint/teal làm màu chính; data dày đặc |
-| **4. 3D energy dashboard** (cam/trắng, nhà 3D) | 3D hero + floating metric; ánh sáng mềm | Mô hình 3D quá chi tiết; dashboard nặng |
-| **5. 3D product showcase** (trắng/xám, phòng 3D) | Hero 3D trung tâm, tối giản, sáng | Nền xám lạnh; sản phẩm không liên quan |
-| **6. 3D logistics landing** (cam/trắng, isometric) | Hero 3D + typography lớn + CTA rõ | Copy bố cục; 3D quá nhiều chi tiết |
+| `--bg-dark` | `#0B1417` | — |
+| `--surface-dark` | `#15232A` | — |
+| `--ink-dark` | `#EAF2F3` | 16.41 trên `--bg-dark` |
+| `--muted-dark` | `#9FB1B5` | 7.22 trên `--surface-dark` |
+| `--accent-text-dark` | `#5EDBCB` | 9.55 trên `--surface-dark` |
 
-**Kết luận:** **Sexy Blue của mẫu 2** là màu chính; **nền sáng của 5**, **map/panel của 2**, **card nổi của 3**, **3D của 4/6**, **cảm giác travel của 1**. Xanh lá/teal của mẫu 1 chỉ dùng cho success/data, không phải brand. Không copy brand/layout.
+- Nút chính vẫn là teal + chữ `--ink`. Màu tuyến bus/metro giữ nguyên ở cả hai chế độ.
+- Người dùng chọn **Sáng / Tối / Theo máy** trong Hồ sơ → Giao diện; tuỳ chọn riêng “Bản đồ tối khi trời tối”.
 
-## Palette — Sexy Blue
+### Quy tắc
 
-Ảnh 2 là hướng chính: xanh dương rực, gradient, glow nhẹ, nền sáng. Ảnh 1 (green/teal) chỉ dùng cho success/data, không làm màu brand.
-
-| Token | Hex | Dùng cho |
-|---|---|---|
-| `--ink` | `#071A33` | Chữ chính/heading |
-| `--navy` | `#0A2A5E` | Footer, section tối, chữ trên nền sáng |
-| `--blue` | `#007BFF` | **Brand chính** cho nền lớn, icon, minh hoạ, gradient. **Không** đặt chữ trắng cỡ thường lên đây (3.98:1, không đạt AA) |
-| `--blue-strong` | `#0062E0` | **Nền nút primary + link/chữ xanh**; chữ trắng trên nền này đạt 5.49:1, chữ này trên nền trắng cũng đạt AA |
-| `--blue-bright` | `#00A3FF` | Gradient, hover, chart; không đặt chữ trắng (2.73:1) |
-| `--sky` | `#6BC5FF` | Gradient nhẹ, illustration; không đặt chữ trắng (1.9:1) |
-| `--ice` | `#E6F4FF` | Surface soft, badge, icon tile |
-| `--orange` | `#F97316` | Accent nhỏ (badge “Beta”, một CTA phụ); có thể bỏ. Chữ trên nền cam dùng `--ink` (6.22:1), không dùng chữ trắng (2.8:1) |
-| `--coral` | `#FB7185` | Cảnh báo/“hot”, rất ít |
-| `--teal` | `#0F766E` | Success/data phụ; không làm brand |
-| `--bg` | `#F5FAFF` | Nền trang |
-| `--surface` | `#FFFFFF` | Card |
-| `--line` | `#DCEBFA` | Viền |
-| `--muted` | `#5B7290` | Chữ phụ |
-| `--success` | `#16A34A` | Trạng thái tốt |
-| `--danger` | `#DC2626` | Lỗi |
-
-### Gradient & glow
-
-```css
---gradient-hero: linear-gradient(135deg, #007BFF 0%, #00A3FF 45%, #6BC5FF 100%);
---gradient-soft: linear-gradient(180deg, #F5FAFF 0%, #E6F4FF 100%);
---glow-blue: 0 20px 60px rgba(0, 123, 255, .25);
-```
-
-- Hero có thể dùng **nền sáng + gradient mesh xanh nhạt + 3D xanh** (chữ `--ink`/`--navy`), hoặc **nền `--navy`/`--blue-strong` + chữ trắng** ở section CTA.
-- `--gradient-hero` (đến `--sky`) chỉ làm nền trang trí/3D; **không đặt chữ trắng lên đoạn sáng của gradient**.
-- Không dùng gradient xanh cho toàn bộ trang; chỉ hero/CTA/footer.
-- Mọi cặp chữ/nền phải kiểm bằng số: ≥ 4.5:1 chữ thường, ≥ 3:1 chữ lớn (≥ 24px hoặc ≥ 18.66px đậm) và thành phần UI.
-
-Quy tắc:
-
-- **Một màu chính:** blue; orange chỉ là điểm nhấn nhỏ, không cạnh tranh.
-- **Nền sáng là chính**; nền xanh đậm chỉ ở hero/CTA/footer.
-- Không dùng quá 3 màu đậm trong một section.
-- Màu không phải tín hiệu duy nhất; luôn có icon/text.
+- Một màu nhấn; không thêm màu brand thứ hai.
+- Mọi cặp chữ/nền phải kiểm bằng số: ≥ 4.5:1 chữ thường, ≥ 3:1 chữ lớn và thành phần UI.
+- Màu không phải tín hiệu duy nhất; luôn có chữ hoặc icon.
+- Gradient chỉ nhẹ, trên nút teal hoặc lớp phủ ảnh để chữ đọc được; không gradient cả trang.
 
 ## Typography
 
 | Ngôn ngữ | Font | Weight |
 |---|---|---|
-| VI/EN | **Be Vietnam Pro** | 400/500/600/700/800 |
+| VI/EN | **Be Vietnam Pro** | 400/500/600/700/800/900 |
 | ZH (sau R1) | **Noto Sans SC** | 400/500/700 |
 | Fallback | system-ui, -apple-system, “Segoe UI”, sans-serif | — |
 
-- Display/heading: Be Vietnam Pro 700/800, tracking hơi âm (`-0.02em`).
-- Body: 16–18px, line-height 1.6.
-- UI nhỏ: 12–14px; không dưới 12px trên mobile.
-- ZH: tăng line-height 1.7; tránh chữ quá đậm ở size nhỏ.
+- Heading 800/900, tracking `-0.02em`. Body 14–16px, line-height ~1.5. Không dưới 11px; nhãn 11px chỉ cho tag in đậm.
+- Số liệu dùng `font-variant-numeric: tabular-nums`.
 
-## 3D & illustration
+## Logo, linh vật, minh hoạ
 
-**Dùng 3D khi:**
+- **Logo:** giữ logo GoWander cũ (ghim teal-xanh lá có xe buýt); file đã tải lên canvas.
+- **Gô:** robot hộp như xe buýt mini (mặt pixel trên màn kem, bảng LED “GÔ 01”, cửa sổ xe ở hai bên, tuyến có trạm trên thân, bánh xe làm chân, ghim bản đồ trên đầu). Có các trạng thái (mood) và cỡ (component `Chip`).
+  - Ảnh tham khảo của chủ dự án là một nhân vật hoạt hình có sẵn; **Gô phải khác rõ** để tránh vấn đề bản quyền.
+- Minh hoạ phẳng, bo tròn, bóng mềm; không 3D nặng trong app. Showcase có thể dùng hero 3D render sẵn (AVIF/WebP ≤ 300 KB).
 
-- Hero showcase: bản đồ/isometric địa danh, xe bus/metro, điện thoại.
-- Section “cách hoạt động”: 3–4 object nhỏ (pin, route, plan, memory).
-- CTA/partner: object đối tác (quán ăn, khách sạn) cách điệu.
+## Ảnh và bản quyền
 
-**Không dùng 3D khi:**
+- Ảnh thật phải có **tác giả, giấy phép, link nguồn**; app hiện dòng ghi công dưới ảnh/video.
+- Bản vẽ R0.5 dùng ảnh Wikimedia Commons (CC BY-SA 3.0/4.0, CC BY 4.0, CC0, phạm vi công cộng); danh sách và tác giả nằm trong ghi chú `photoCredit` trên canvas.
+- Admin không đăng được câu chuyện khi một media còn thiếu giấy phép (xem `09-stories-explore-search.md`).
+- Ảnh do quán tải lên: quán chịu trách nhiệm bản quyền (điều khoản đối tác).
+- Không testimonial/logo đối tác khi chưa xin phép; mock ghi “DEMO”.
 
-- Trang policy/FAQ/contact — chỉ typography.
-- Bảng giá/Admin — ưu tiên rõ ràng.
-- Mobile low-end — tránh WebGL.
+## Layout và responsive
 
-**Định dạng:**
+| Bề mặt | Khung thiết kế | Ghi chú |
+|---|---|---|
+| App điện thoại | 390 × 844 | Thanh điều hướng dưới **chỉ icon** (xem “Điều hướng”); chế độ quán có thanh tối riêng 4 mục |
+| App iPad | 1194 × 834 (ngang) | Thanh điều hướng dọc + 2 cột (danh sách/nội dung + bản đồ/ảnh) |
+| Web (Admin, Partner, Showcase, đăng ký hợp tác) | 1440 rộng, fluid | Bản iPad 834 và điện thoại 390 phải dùng được |
 
-- Hero 3D render sẵn: **AVIF/WebP**, transparent hoặc nền gradient, ≤ 300 KB.
-- Fallback: PNG/2D illustration nếu trình duyệt không hỗ trợ.
-- Nếu interactive: Spline/Three.js **lazy load**, desktop only, `prefers-reduced-motion`, có nút tắt.
-- Ánh sáng mềm, bóng đổ nhẹ; 3D ánh xanh (blue rim light); không photoreal rối.
+- Breakpoint web: **≤ 760px** (Partner) / **≤ 700px** (Admin): thanh bên chuyển thành thanh ngang trên cùng; bảng rộng cuộn trong hộp; form một cột.
+- Khung responsive trên canvas là **khung thường, không viền thiết bị** (chủ dự án không muốn khung bao).
+- Touch target ≥ 44px (app ≥ 48px khi có thể).
 
-## Layout showcase
+## Điều hướng và lựa chọn dài
 
-### Hero
-
-```text
-[ nav ]
-[ trái: eyebrow + H1 + sub + CTA + trust ]
-[ phải: 3D map/landmark + 2 floating cards ]
-```
-
-- H1 56–72px desktop, 36–44px mobile.
-- CTA chính: blue pill (hoặc trắng trên nền xanh); CTA phụ: outline navy/blue.
-- Floating cards: route, “3 điểm gần đây”; không bịa số; không card thời tiết (chưa có ở R1).
-
-### Section map/dịch vụ
-
-- Map lớn (như mẫu 2) + panel nổi:
-  - “Tuyến của bạn”
-  - “Điểm gần đây”
-  - “Đối tác”
-- Dùng screenshot/map thật khi có; nếu chưa, mock có nhãn “demo”.
-
-### Feature cards
-
-- 3–4 card, icon tile ice/blue, tiêu đề 18–20px, mô tả 14–16px.
-- Bo 20–24px, shadow nhẹ, hover nhẹ.
-
-### Pricing (sau R1 — không có trang Pricing ở R1)
-
-- 3 card; gói giữa highlight (viền blue).
-- R1: giá “Beta / Liên hệ”; không số bịa.
-- Bảng so sánh ngắn; CTA “Liên hệ”.
-
-### Policies
-
-- Trang chữ sạch, max-width 720–780px; mục lục bên trái trên desktop.
-- Không 3D, không gradient.
+- **App (điện thoại):** thanh dưới dạng viên thuốc, **chỉ icon**: Bản đồ, Khám phá, nút Tìm tuyến nổi ở giữa, Kế hoạch, Đã lưu, **⋯**. Mục đang mở có nền `--accent-soft`. Tên mục vẫn có cho trình đọc màn hình (`aria-label` + chữ ẩn). Bấm **⋯** → **xổ ra bảng điều hướng** có tên đầy đủ, nhóm Chính / Khám phá thêm (Câu chuyện, Khám phá Việt Nam, Tìm theo loại) / Của tôi (Thông báo, Đặt bàn của tôi, Quán của tôi, Hồ sơ). Màn: `NavMenu`.
+  - *Đánh đổi:* icon không chữ khó hiểu hơn với người mới; onboarding nên giới thiệu thanh này một lần.
+- **Admin:** thanh bên 5 nhóm: Tổng quan, Tài chính, Nội dung ▸, Partner ▸, Hệ thống ▸; mục con mở bằng flyout. Không để thanh bên dài quá ~6 mục.
+- **Partner web:** thanh bên chia nhóm (Vận hành / Thiết lập / Tiền) + ô chọn quán.
+- **Nhiều lựa chọn (> ~5) → dropdown, nhóm, hoặc “Thêm ▾”**; không để chip/nút kéo dài nhiều hàng.
 
 ## Components
 
 | Component | Style |
 |---|---|
-| Button primary | `--blue-strong` fill, white text, pill 999, height 48 |
-| Button secondary | Outline navy/blue, transparent |
-| Card | White, radius 20–24, border `--line`, shadow mềm |
-| Chip | Ice/white, radius 999, icon + text |
-| Input | White, border `--line`, focus blue |
-| Nav | Trong suốt trên hero, chuyển trắng khi scroll |
-| Footer | Navy, chữ trắng, link muted |
+| Button primary | Nền `--accent`, chữ `--ink`, pill, cao 44–54 |
+| Button secondary | Viền `--line`, nền trắng, chữ `--body` |
+| Button danger | Nền `#B42318`, chữ trắng |
+| Card | Trắng, bo 20–28, bóng mềm |
+| Chip / tag | Pill; trạng thái dùng cặp màu trạng thái ở trên |
+| Input / select | Trắng, viền `--line`, cao ≥ 44, có `<label>` |
+| Sheet (app) | Bo trên 28–30, tay kéo |
+| Toggle | Teal khi bật, xám khi tắt |
 
 ## Motion
 
-- Floating card: 6–8s, biên độ 4–8px.
-- Parallax hero: nhẹ, không giật.
-- Transition: 150–250ms.
-- Tôn trọng `prefers-reduced-motion`; không autoplay video có tiếng.
+- Transition 150–250ms; tôn trọng `prefers-reduced-motion`; không autoplay video có tiếng.
 
 ## Accessibility
 
-- Contrast AA (4.5:1 cho text thường).
-- Focus ring rõ; không bỏ outline.
-- Alt text cho 3D/ảnh; mô tả ngắn.
-- Touch target ≥ 48px.
-- Không dùng màu làm tín hiệu duy nhất.
-- Form có label, error text, `aria`.
-- Ngôn ngữ `lang` đúng cho VI/EN (thêm ZH khi mở ZH).
+- Contrast AA kiểm bằng số; focus ring rõ.
+- Nút chỉ có icon phải có `aria-label`; SVG trang trí `aria-hidden`.
+- Form có label, lỗi bằng chữ, `aria-invalid`.
+- `lang` đúng cho VI/EN.
+- Loa đọc chỉ dẫn (Gô đọc) có 3 mức: Tắt / Cảnh báo / Đầy đủ.
 
 ## Performance
 
-- Hero LCP < 2.5s (mục tiêu).
-- 3D/ảnh lazy below fold; preload hero.
-- Font subset; chỉ load weight cần.
+- Hero LCP < 2.5s (mục tiêu); ảnh lazy dưới màn đầu; font subset.
 - Không WebGL nặng ở R1.
-- Lighthouse mobile ≥ 90 (mục tiêu).
-
-## Nội dung/ảnh
-
-- Chỉ dùng screenshot thật khi có; nếu mock, ghi “demo”.
-- Không testimonial/logo đối tác khi chưa xin phép.
-- Không hứa tính năng chưa có.
-- Credit ảnh/3D nếu dùng nguồn ngoài.
-
-## R1 — phạm vi thiết kế
-
-- Hero 3D tĩnh + 2 floating card.
-- Section map (screenshot/map có nhãn).
-- 4 feature card (chỉ tính năng R1).
-- Trang Download, Contact (email).
-- 3 policy page (Privacy, Terms, Map/Data); chỉ typography.
-- VI/EN; responsive; accessibility cơ bản.
 
 ## Câu hỏi mở
 
-1. Accent phụ: **orange** hay bỏ hẳn? (đề xuất orange rất nhẹ, chỉ badge/CTA phụ)
-2. 3D style: isometric sạch hay realistic? (đề xuất isometric sạch, ánh xanh)
-3. Có cần dark mode cho showcase không? (đề xuất không; app có dark)
-4. Dùng ảnh thật hay illustration cho hero?
-5. Có thuê 3D artist/illustrator không, hay dùng asset có license?
-6. Font ZH: Noto Sans SC hay system font?
+1. Chủ dự án duyệt palette v4 + Gô trên canvas (gate R0.5).
+2. Cập nhật Design System artifact sang v4 (hiện vẫn token blue cũ).
+3. Bộ icon thống nhất: tự vẽ stroke 2px hay dùng bộ có license (ví dụ Lucide, MIT)?
+4. Font ZH khi mở ZH.
