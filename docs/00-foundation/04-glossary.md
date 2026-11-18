@@ -27,6 +27,13 @@ Mục đích: **một nghĩa cho mỗi từ**. Nếu một từ có nhiều ngh�
 | **Guide** | Nội dung biên tập theo vùng/chủ đề (ví dụ cẩm nang TP.HCM) |
 | **Hidden Gem** | Địa điểm ít người biết, do biên tập chọn; không phải “review nhiều sao” |
 | **Recommendation** | Gợi ý có giải thích; tách khỏi quảng cáo trả tiền |
+| **Saved place** | Địa điểm người dùng lưu lại; local-first, không public |
+| **Place submission** | Đề xuất địa điểm mới của user; pending đến khi admin duyệt |
+| **Moderation** | Duyệt/sửa/gộp/từ chối nội dung user; có audit |
+| **Verification** | Trạng thái tin cậy của place: unverified/verified/official |
+| **UGC** | User-generated content: địa điểm, ảnh, bài viết, bình luận |
+| **Photo submission** | Ảnh user gửi kèm đề xuất địa điểm; pending, phải duyệt, strip EXIF |
+| **Comment** | Bình luận của user; R4 text-only, cần account/moderation; ảnh comment sau |
 | **Journey Memory** | Bản ghi hành trình đã đi: plan, ảnh, ghi chú, thời gian |
 | **Storybook** | Cách trình bày Journey Memory thành câu chuyện/album riêng tư |
 | **Explore** | Giai đoạn đi theo tuyến, xem bản đồ, chỉ dẫn, thời tiết |
@@ -69,8 +76,12 @@ Mục đích: **một nghĩa cho mỗi từ**. Nếu một từ có nhiều ngh�
 | **Reverse geocoding** | Đổi toạ độ thành địa chỉ/tên |
 | **Photon** | Geocoder dùng OSM; fallback |
 | **Vietmap** | Nhà cung cấp bản đồ/geocoding Việt Nam; dùng có key |
-| **`dataStatus`** | Trạng thái dữ liệu trong API: `ASSUMED` hoặc `OFFICIAL` |
-| **ASSUMED** | Dữ liệu giả định/ước tính, không phải lịch chính thức; phải ghi rõ |
+| **`dataStatus`** | Trạng thái dữ liệu trong API: `OFFICIAL`, `ASSUMED`, `BEST_EFFORT`, `UNSUPPORTED` |
+| **Pilot area** | TP.HCM — nơi transit được làm sâu (bus + metro L1 + walk/bike) |
+| **Coverage** | Vùng/mode được hỗ trợ routing; ngoài coverage chỉ map/discover |
+| **ASSUMED** | Dữ liệu giả định/ước tính cho pilot, không phải lịch chính thức; phải ghi rõ |
+| **BEST_EFFORT** | Route/geometry từ OSM, không có timetable đầy đủ; chỉ tham khảo |
+| **UNSUPPORTED** | Chưa hỗ trợ routing tại khu vực/mode |
 | **OFFICIAL** | Dữ liệu từ nguồn chính thức; chỉ dùng khi có bằng chứng |
 | **DEMO** | Dữ liệu mẫu cho demo; không dùng như fact |
 | **Mock** | Dữ liệu giả trong code/UI; phải đăng ký và thay trước pilot |

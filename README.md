@@ -61,7 +61,9 @@ Chưa có code. Khi docs được duyệt, code sẽ được thêm theo từng 
 - [ ] Duyệt system context + containers.
 - [x] ADR-0001 web stack: React/Next/Vite.
 - [ ] ADR-0002 API/auth.
-- [ ] Duyệt Showcase Web spec + brand direction (`docs/01-product/04-showcase-web.md`, `05-brand-ui-direction.md`).
+- [ ] R1.5: client account + place submissions (account required, 1–3 photos).
+- [ ] R0.5: Figma design tokens + R1 screens + prototype before UI code.
+- [ ] Duyệt Showcase Web + brand + saved/contributed places (`docs/01-product/04`, `05`, `06`).
 - [ ] Chốt API contract v0.
 - [ ] Chốt data source inventory + trạng thái pháp lý.
 - [ ] Dựng repo code + CI + môi trường local.

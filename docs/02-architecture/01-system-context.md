@@ -15,7 +15,7 @@ R1 gồm **Client Mobile + Admin Web + Showcase Web** (marketing). Client Web ap
 
 | Actor | Mô tả | R1 |
 |---|---|---|
-| **Client user** | Du khách/người dùng cuối; guest-first, có thể chưa có tài khoản | ✅ |
+| **Client user** | Du khách/người dùng cuối; guest-first; tài khoản từ R1.5 | ✅ |
 | **Admin** | Vận hành nội dung, địa điểm, ảnh, feedback, người dùng | ✅ |
 | **Editor** | Biên tập nội dung/guide; có thể là role riêng của Admin | ✅ (role) |
 | **Partner** | Đối tác dịch vụ/khuyến mãi/booking | ❌ R6 |
@@ -50,7 +50,7 @@ R1 gồm **Client Mobile + Admin Web + Showcase Web** (marketing). Client Web ap
 | **Open-Meteo** | Thời tiết cho plan/route | ⏳ R2 | Ẩn weather, không chặn plan |
 | **Mapillary** | Ảnh đường phố | ⏳ | Ẩn ảnh, dùng bản đồ |
 | **Cloudflare R2 / S3** | Lưu ảnh | ⏳ | Dùng local cho dev; báo lỗi upload |
-| **Google Sign-In** | Đăng nhập client (sau) | ❌ R1 | Guest-first; không chặn |
+| **Google Sign-In** | Đăng nhập client (R1.5) | ❌ R1 | Guest-first; không chặn |
 | **Email/SMS** | Xác thực/khôi phục Admin/account | ⏳ | Admin reset qua email; client sau |
 | **Payment/Booking partners** | Booking/affiliate | ❌ R7 | Không có trong R1 |
 | **AI provider** | AI Companion | ❌ R5 | Không có trong R1 |
