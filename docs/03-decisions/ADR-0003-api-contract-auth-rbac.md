@@ -5,7 +5,9 @@
 - **Người quyết định:** chủ dự án (chờ chốt)
 - **Liên quan:** `ADR-0001-web-stack.md`, `ADR-0002-account-roles.md`, `../02-architecture/01-system-context.md`, `../02-architecture/02-containers.md`, `../01-product/08-accounts-roles-partners.md`, `../04-development/02-conventions.md`
 
-> ADR-0002 đang **Proposed**. ADR-0003 giả định hướng của ADR-0002 (một kiểu tài khoản, quyền theo quán, Admin là tài khoản riêng) sẽ được chấp nhận. Nếu ADR-0002 đổi, phần quyền trong ADR này phải sửa theo.
+> **Cập nhật 18-11-2026 (ADR-0002 viết lại):** mô hình quán đổi từ “một kiểu tài khoản + vai trò (`shop_membership`)” sang **tài khoản quán do Admin cấp** (mã tài khoản + mật khẩu), **đăng nhập bằng mã nhân viên + mật khẩu riêng** (không có mật khẩu quán; email báo thiết bị mới), **nhiều thiết bị cùng lúc**, **chi nhánh**, email chỉ để khôi phục. Các phần dưới đây nói về `shop_membership`, vai trò gắn tài khoản cá nhân, mật khẩu quán 6+ và máy quán R7 là **bản cũ, cần viết lại**: realm xác thực thêm “quán” (mã nhân viên + mật khẩu, phiên theo thiết bị, khôi phục qua email), RBAC theo (quán, chi nhánh, mã nhân viên). Việc tiếp theo ghi ở `ADR-0002`, mục “Việc tiếp theo”.
+
+> (Ghi chú cũ, trước khi viết lại ADR-0002) ADR-0002 đã **Accepted cho R1** (18-11-2026): một kiểu tài khoản, quyền theo quán, Admin là tài khoản riêng. ADR-0003 bám theo hướng đó; phần R7 nhiều Chủ quán/máy quán vẫn là hướng, nếu đổi thì phần quyền trong ADR này phải sửa theo.
 
 ## Bối cảnh
 
@@ -79,7 +81,7 @@ Quy tắc:
 
 - Session cookie `__Host-gw_partner`: cùng thuộc tính bảo vệ như Admin.
 - Idle timeout **8 giờ**, absolute timeout **7 ngày**. *(Đề xuất; chờ chốt. Nhân viên giữa ca không muốn đăng nhập lại liên tục.)*
-- Không bắt buộc 2 lớp mặc định; Chủ quán có thể bật, và GoWander có thể bắt buộc khi có thu cọc hoặc đối soát tiền.
+- Không bắt buộc 2 lớp mặc định; Chủ quán có thể bật, và GoWander có thể bắt buộc khi có thu cọc hoặc đối soát tiền. **Khuyến nghị bật 2FA cho Chủ quán** vì mật khẩu thành viên quán chỉ tối thiểu 6 ký tự/6 số (ADR-0002).
 - Mọi request đến `/partner/shops/{shopId}/...` phải kiểm `shop_membership` của account đang đăng nhập; không tin `shopId` do client gửi.
 
 #### 3.4 Quy tắc chung cho cookie
@@ -94,6 +96,8 @@ Quy tắc:
 
 - Băm mật khẩu bằng **Argon2id** (`golang.org/x/crypto/argon2`), tham số khởi điểm OWASP: 19 MiB, 2 vòng, 1 luồng, muối 16 byte; tham số lưu kèm hash để nâng cấp dần. *(Chờ chốt; không dùng bcrypt vì giới hạn 72 byte.)*
 - Mật khẩu client: 10–128 ký tự, có ít nhất một chữ và một số; không trùng 3 mật khẩu gần nhất (lưu hash lịch sử). Admin: tối thiểu 12 ký tự. *(Đề xuất; chờ chốt.)*
+- **Thành viên quán (Owner/Manager/Staff):** 6–128 ký tự; cho phép **6 chữ số**; chặn mật khẩu phổ biến (`123456`, `000000`, `111111`, `password`…). Đây là ngoại lệ có chủ đích theo ADR-0002; bù bằng khoá sau 5 lần sai, rate limit, audit và khuyến nghị 2FA cho Chủ quán. Mật khẩu tạm do Quản lý/Chủ quán cấp: dùng một lần, hết hạn 24 giờ, bắt đổi ngay, không hiện lại, không xem mật khẩu cũ.
+- Mật khẩu tạm không gửi qua email/SMS mặc định; người cấp chuyển trực tiếp cho nhân viên.
 - Không tiết lộ tài khoản có tồn tại hay không: login sai, quên mật khẩu, đăng ký trùng đều trả thông báo trung tính; vẫn băm thử một lần khi account không tồn tại để thời gian phản hồi tương đương.
 - Mã xác minh email/khôi phục: 6 số, hết hạn **10 phút**, tối đa **5 lần gửi/giờ/tài khoản**, lưu dạng băm, dùng một lần. *(Đề xuất; chờ chốt.)*
 - Đăng nhập Google (R1.5) và Apple (trước App Store, nếu có Google) là **identity provider**, không phải realm riêng: sau khi xác minh, cấp cùng token client. Chỉ liên kết account khi email đã được xác minh; không tự động gộp theo email chưa xác minh.
@@ -110,7 +114,7 @@ Quy tắc:
 | Partner | `owner`, `manager`, `staff` | Theo `shop_id` trong `shop_membership` |
 | Admin | `owner`, `ops`, `editor`, `moderator`, `accountant`, `partner_support` | Toàn hệ thống hoặc theo quyền được cấp |
 
-- Một account có thể có nhiều vai trò ở nhiều quán; mỗi quán **đúng một** `owner` đang hoạt động.
+- Một account có thể có nhiều vai trò ở nhiều quán; **R1 mỗi quán đúng một** `owner` đang hoạt động; **R7 có thể nhiều owner**, ít nhất một, theo ADR-0002.
 - Admin không tự động có quyền Partner; Partner không tự động có quyền Admin.
 - Danh sách quyền Admin lấy từ `08-accounts-roles-partners.md`; tên quyền kỹ thuật dạng `resource:action` (ví dụ `place:write`, `story:publish`, `submission:review`, `shop:payout:read`, `admin:user:manage`, `backup:restore`).
 
@@ -133,8 +137,12 @@ Quy tắc:
 | Xem đơn hôm nay của quán | — | ✓ | ✓ | ✓ | ✓ |
 | Bật/tắt món, sửa giá nhanh | — | ✓ | ✓ | ✓ | — |
 | Sửa thực đơn/khung giờ/cọc | — | — | ✓ | ✓ | — |
+| Thêm/sửa Nhân viên; cấp lại mật khẩu Nhân viên; khoá/mở Nhân viên | — | — | ✓ | ✓ | — |
+| Cấp lại mật khẩu Quản lý/Chủ quán | — | — | — | ✓ | — |
 | Đối soát/tiền | — | — | — | ✓ | ✓ (kế toán) |
-| Mời/gỡ nhân viên | — | — | — | ✓ | ✓ |
+| Mời/gỡ Quản lý; thêm/gỡ Chủ quán (R7, Admin xác nhận) | — | — | — | ✓ | ✓ |
+| Xoá Nhân viên | — | — | — | ✓ | — |
+| Xem nhật ký thao tác quán | — | — | ✓ | ✓ | ✓ |
 | Duyệt đề xuất/đối tác | — | — | — | — | ✓ |
 | Sao lưu/khôi phục | — | — | — | — | ✓ (Owner/ops) |
 
@@ -249,7 +257,7 @@ Chỉ các endpoint cần cho R1; phần còn lại là seam, chưa mở:
 | Auth client (R1.5) | `/api/v1/auth/register`, `/login`, `/google`, `/logout`, `/verify-email`, `/password/forgot`, `/password/reset` | Public |
 | Me (R1.5) | `GET/DELETE /api/v1/me`, `GET /api/v1/me/submissions`, `POST /api/v1/me/submissions`, `POST /api/v1/me/submissions/{id}/withdraw` | Client |
 | Admin | `/api/v1/admin/auth/*`, `/api/v1/admin/places`, `/stories`, `/media`, `/feedback`, `/submissions`, `/partners`, `/users`, `/audit` | Admin |
-| Partner (R6) | `/api/v1/partner/auth/*`, `/api/v1/partner/shops/{shopId}/...` | Partner |
+| Partner (R6) | `/api/v1/partner/auth/*`, `/api/v1/partner/shops/{shopId}/...`, `/api/v1/partner/shops/{shopId}/staff`, `POST /api/v1/partner/shops/{shopId}/staff/{memberId}/reset-password` | Partner |
 
 - `GET /api/v1/app/config` không trả bí mật; chỉ trả URL tile/style, feature flag công khai, phiên bản tối thiểu, locale mặc định.
 - Feedback guest có thể gửi không cần account; nếu có account thì lấy email/tên từ account, không tin client.
@@ -294,11 +302,13 @@ Chỉ các endpoint cần cho R1; phần còn lại là seam, chưa mở:
 - OpenAPI + sinh client + contract test là thêm CI và kỷ luật; đội nhỏ phải duy trì.
 - Mobile phải xử lý token hết hạn/ bị thu hồi, đăng nhập lại, nhiều thiết bị.
 - 2FA Admin làm chậm thao tác khẩn cấp; cần quy trình mã dự phòng và khôi phục.
+- Mật khẩu thành viên quán tối thiểu 6 ký tự/6 số yếu hơn khách/Admin; phải bù bằng lockout/rate limit/audit.
 - Các con số timeout/rate limit là đề xuất, cần đo và chỉnh.
 
 ### Rủi ro
 
-- ADR-0002 chưa Accepted; nếu mô hình quyền quán đổi (ví dụ chỉ Admin cấp nhân viên), ma trận quyền và bảng `shop_membership` phải sửa.
+- ADR-0002 đã Accepted cho R1 nhưng R7 nhiều Chủ quán/máy quán còn là hướng; nếu đổi, ma trận quyền và bảng `shop_membership` phải sửa.
+- Mật khẩu 6 số dễ đoán nếu lockout/rate limit bị vô hiệu; cần test và giám sát.
 - Google/Apple sign-in có thể trễ R1.5; không được chặn đăng nhập email/password.
 - 2FA TOTP có thể mất thiết bị; quy trình recovery phải được viết và thử trước khi mở Admin ra Internet.
 - Rate limit theo IP có thể chặn nhầm người dùng sau NAT; cần theo dõi và có ngoại lệ.
@@ -307,8 +317,8 @@ Chỉ các endpoint cần cho R1; phần còn lại là seam, chưa mở:
 
 ## Việc tiếp theo
 
-- [ ] Chủ dự án chốt các con số đề xuất: thời hạn phiên, 2FA (TOTP/passkey), thời gian step-up, rate limit, độ dài mật khẩu.
-- [ ] Chủ dự án chốt ADR-0002 (đặc biệt điểm 4: chủ quán mời nhân viên hay chỉ Admin cấp).
+- [ ] Chủ dự án chốt các con số đề xuất: thời hạn phiên, 2FA (TOTP/passkey), thời gian step-up, rate limit.
+- [x] ADR-0002 đã chốt hướng quyền quán (Admin cấp Chủ quán; Chủ quán mời; R1 một/R7 nhiều).
 - [ ] Viết `../02-architecture/04-api-contract.md` với đặc tả chi tiết và kế hoạch OpenAPI.
 - [ ] Viết `api/openapi.yaml` v0 cho các endpoint R1; lint + mock.
 - [ ] Viết `../02-architecture/03-data-model.md` cho bảng session/account/RBAC (khớp ADR-0004).

@@ -175,4 +175,4 @@ Một máy/host hoặc docker compose:
 - [ ] Viết `03-data-model.md`.
 - [ ] Viết `04-api-contract.md`.
 - [ ] Viết `05-security-privacy.md`.
-- [ ] Viết ADR-0003 (API/auth) và ADR-0004 (data/PostGIS); chốt ADR-0002 (tài khoản/vai trò).
+- [x] ADR-0002 (Accepted R1), ADR-0003 (API/auth, Proposed), ADR-0004 (data/PostGIS, Proposed), ADR-0005 (tìm đường, Proposed).

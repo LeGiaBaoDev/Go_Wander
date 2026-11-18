@@ -168,10 +168,16 @@ Mục đích: **một nghĩa cho mỗi từ**. Nếu một từ có nhiều ngh�
 
 | Thuật ngữ | Nghĩa |
 |---|---|
-| Chế độ quán / “Quán của tôi” | Phần trong app chỉ hiện khi tài khoản có vai trò ở một quán; làm việc hằng ngày (đơn, trạng thái, món) |
-| Chủ quán / Quản lý / Nhân viên | Ba vai trò trong một quán (`shop_membership.role`); bảng quyền ở `01-product/08-accounts-roles-partners.md` |
+| Tài khoản quán | Tài khoản do Admin cấp sau khi duyệt hồ sơ; mỗi người trong quán đăng nhập bằng **mã nhân viên** + mật khẩu riêng (không có mật khẩu quán); mở giao diện kinh doanh trong app (ADR-0002). Email chỉ để khôi phục, không đăng nhập |
+| Chủ quán / Quản lý / Nhân viên | Ba vai trò trong một quán, gắn với **mã nhân viên** (`CQ`/`QL`/`NV`); Chủ quán thấy đủ tab và tự CRUD nhân viên; bảng quyền ở `01-product/08-accounts-roles-partners.md` |
+| Chi nhánh | Địa điểm của một doanh nghiệp, có địa chỉ, giờ mở, khung đặt trước và đơn riêng |
+| Giai đoạn 1/2/3 (kinh doanh) | Đặt trước miễn phí + affiliate → gói tháng → hoa hồng thanh toán trong app (`01-product/10-business-model.md`) |
+| Mã quán | Mã 2–6 chữ cái in hoa, duy nhất, do Admin đặt; tiền tố của mã nhân viên |
+| Mã nhân viên | `<mã quán>-<vai trò><số thứ tự>` (ví dụ `LL-NV007`), dùng làm tên đăng nhập; **định danh, không bí mật**; bí mật là mật khẩu riêng; không dùng một mình để đăng nhập |
+| Mật khẩu tạm | Mật khẩu dùng một lần do Quản lý/Chủ quán cấp lại; hiện một lần, hết hạn 24 giờ, bắt đổi khi đăng nhập |
+| Đổi người đứng ca | Thao tác trên máy dùng chung: đăng xuất người hiện tại rồi mở lại ô mã nhân viên + mật khẩu; máy nhớ vài mã gần đây nhưng vẫn phải nhập mật khẩu |
 | Hồ sơ hợp tác | Yêu cầu làm đối tác kèm giấy tờ, Admin xác minh trước khi cấp tài khoản (`partner_application`) |
-| Đặt món trước | Khách chọn món (tên + giá) khi đặt bàn; trả tại quán; tuỳ quán bật |
+| Đặt món trước | Khách chọn món (tên + giá) khi đặt trước; trả tại quán; tuỳ quán bật |
 | Cọc | Tiền giữ bàn theo chính sách quán; được chụp lại lúc đặt; hoàn theo mốc thời gian huỷ |
 | Câu chuyện | Bài về khu lịch sử/công trình, soạn bằng editor theo khối, có audio/video và ghi công media |
 | Gô | Linh vật GoWander (robot hộp kiểu xe buýt mini); “Gô đọc” là loa đọc chỉ dẫn 3 mức |

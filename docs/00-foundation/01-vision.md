@@ -114,7 +114,7 @@ Các số này là **giả thuyết**, sẽ hiệu chỉnh sau usability test.
 - **R5 — AI Beta:** AI companion có giới hạn nguồn/chi phí/kiểm chứng.
 - **R6 — Business Beta:** Partner Web, Ads, Affiliate, analytics.
 - **R7 — Booking:** external → Partner API → tích hợp sâu.
-- **R8 — Expansion:** địa lý, cá nhân hóa (chế độ quán trong app thay Business Mobile, xem ADR-0002).
+- **R8 — Expansion:** địa lý, cá nhân hóa (giao diện quán trong app thay Business Mobile, xem ADR-0002).
 
 Chi tiết: [`02-scope.md`](./02-scope.md).
 

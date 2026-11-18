@@ -21,12 +21,12 @@ ADR ghi lại **quyết định kiến trúc** và lý do. Một ADR đã Accept
 | ADR | Tiêu đề | Trạng thái | Ngày |
 |---|---|---|---|
 | [ADR-0001](./ADR-0001-web-stack.md) | Web stack: React + TypeScript, Next.js cho Client Web, Vite cho Admin/Partner | Accepted | 18-11-2026 |
-| [ADR-0002](./ADR-0002-account-roles.md) | Một kiểu tài khoản, quyền theo vai trò ở từng quán; Admin cấp tài khoản quán | Proposed | 18-11-2026 |
+| [ADR-0002](./ADR-0002-account-roles.md) | Tài khoản khách, tài khoản quán do Admin cấp, đăng nhập bằng mã nhân viên + mật khẩu riêng | Accepted (viết lại 18-11-2026) | 18-11-2026 |
 | [ADR-0003](./ADR-0003-api-contract-auth-rbac.md) | Hợp đồng API, đăng nhập, phiên và RBAC | Proposed | 18-11-2026 |
 | [ADR-0004](./ADR-0004-data-model-postgis.md) | Mô hình dữ liệu PostgreSQL/PostGIS | Proposed | 18-11-2026 |
 | [ADR-0005](./ADR-0005-routing-algorithm.md) | Thuật toán tìm đường: lọc đúng luật, đa tiêu chí Pareto, bốn nhánh; OTP/RAPTOR/A*, transit/OSM giả định | Proposed | 18-11-2026 |
 
-> **ADR-0002 vẫn là Proposed.** Không đổi trạng thái sang Accepted cho tới khi chủ dự án chốt, đặc biệt điểm 4 (chủ quán tự mời nhân viên hay chỉ Admin cấp). ADR-0003 giả định hướng của ADR-0002; nếu ADR-0002 đổi, ADR-0003 phải được rà lại.
+> **ADR-0002 đã viết lại (18-11-2026) và Accepted:** ba loại đăng nhập (cá nhân, quán do Admin cấp, Admin); đăng nhập quán bằng mã nhân viên + mật khẩu riêng (bỏ mật khẩu quán); nhiều thiết bị và chi nhánh; Chủ quán tự CRUD nhân viên. **ADR-0003/0004 còn mô tả mô hình cũ (`shop_membership`) và phải viết lại theo ADR-0002** (xem ghi chú đầu mỗi file); chúng vẫn **Proposed**.
 
 ### Quan hệ giữa các ADR
 
@@ -36,7 +36,7 @@ ADR ghi lại **quyết định kiến trúc** và lý do. Một ADR đã Accept
 | ADR-0004 | ADR-0003 | Bảng account/session/RBAC, mô hình dữ liệu và PostGIS |
 | ADR-0005 | ADR-0003, ADR-0004 | Route API, coverage/graph metadata, thuật toán và nhãn dữ liệu |
 
-> Các ADR mới đang **Proposed**: chưa phải luật. Số liệu/thời hạn/trọng số trong đó là đề xuất, phần lớn gắn `ASSUMED`; chủ dự án chốt mới có hiệu lực.
+> Các ADR **0003/0004/0005** đang **Proposed**: chưa phải luật. Số liệu/thời hạn/trọng số trong đó là đề xuất, phần lớn gắn `ASSUMED`; chủ dự án chốt mới có hiệu lực.
 
 ## Quy ước
 

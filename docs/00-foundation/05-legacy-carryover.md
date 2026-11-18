@@ -22,7 +22,7 @@ Repo cũ (`../GoWander`, nhánh `develop`) không chỉ có docs: nó có 22 ADR
 | 025 | Tile OpenFreeMap | Không SLA; phải quyết định lại trước pilot | **Giữ**; thêm gate “tile có SLA/tự host” |
 | 026 | Toolchain mobile | Bộ phiên bản khớp maplibre-compose 0.20.0 | Giữ ý; chưa ADR v2 |
 | 027 | API tìm tuyến bằng Go | Lớp Go giữa app và OTP | Giữ; chưa ADR v2 |
-| 028 | PostgreSQL/PostGIS cho Discover | Image, quyền DB, migration, nguồn dữ liệu | Giữ; ADR-0004 (planned) |
+| 028 | PostgreSQL/PostGIS cho Discover | Image, quyền DB, migration, nguồn dữ liệu | Giữ; ADR-0004 (Proposed) |
 | 031 | Geocoding | Photon tự chạy, Vietmap là hướng nâng cấp | Giữ; chưa ADR v2 |
 | 032 | Bus từ OSM, graph TP.HCM, CAR + BICYCLE | Bus giả định tốc độ 15 km/h (không nguồn), bỏ 119/349 relation; **một graph OTP cho khung TP.HCM**; API có CAR/BICYCLE, xe máy bị từ chối | **Giữ graph TP.HCM + bus OSM.** **Thay:** CAR hoãn (cần dữ liệu giao thông). Không hứa tìm tuyến ngoài TP.HCM |
 | 033 | Nav/ảnh đường phố/loại bản đồ | **Vệ tinh chưa bật** vì cần giấy phép (Esri/ArcGIS); chọn 2D/3D | **Giữ:** vệ tinh ngoài R1 |
@@ -30,7 +30,7 @@ Repo cũ (`../GoWander`, nhánh `develop`) không chỉ có docs: nó có 22 ADR
 | 036 | Lưu plan/saved trên máy | Một chuỗi JSON trong Prefs; nâng cấp SQLDelight khi cần | **Giữ** (đã link ở `06-saved-and-contributed-places.md`) |
 | 037 | Admin web | Go server-rendered + htmx, loại React/Next vì “một người, chưa có Node”; §2–3 bị ADR-039 thay | **Thay:** v2 chọn React + Vite (ADR-0001, chủ dự án chốt 18-11-2026). Đánh đổi đã ghi ở ADR-0001 |
 | 038 | Đo lường sử dụng | Chỉ bộ đếm gộp theo ngày, không lưu sự kiện từng người | **Giữ nguyên tắc** (đã ghi ở seam analytics) |
-| 039 | Tài khoản Admin | Tài khoản riêng + mật khẩu; email qua SMTP | Giữ hướng; chi tiết ở ADR-0002 (Proposed) và ADR-0003 (planned) |
+| 039 | Tài khoản Admin | Tài khoản riêng + mật khẩu; email qua SMTP | Giữ hướng; chi tiết ở ADR-0002 (Accepted R1) và ADR-0003 (Proposed) |
 | 040 | Tài khoản app | Guest được dùng; email/SĐT/tên đăng nhập + Google; phiên 60 ngày; **có xoá tài khoản trong app**; Apple Sign-In để sau nhưng ghi nhận Guideline 4.8 | **Giữ.** Đã thêm vào R1.5: xoá tài khoản + cân nhắc Sign in with Apple |
 | 041 | Nội dung Editor.js | Block JSON, app render native | **Chưa chốt:** ADR-0001 còn “TipTap hoặc Editor.js” |
 | 024, 029, 030, 034 | Giám sát Admin, API client mobile, UI kit, IA UX-2 | Chưa đọc kỹ | **Chưa xem xét** |
