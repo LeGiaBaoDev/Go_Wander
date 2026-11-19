@@ -14,11 +14,13 @@ info:
     name: GoWander
   license:
     name: Proprietary
+    identifier: LicenseRef-Proprietary
 servers:
   - url: /
     description: Cùng origin qua reverse proxy (Admin/Partner); client mobile dùng base URL cấu hình
   - url: http://localhost:8080
     description: Dev local
+security: []
 tags:
   - name: Health
     description: Kiểm tra sống/chết; không dữ liệu nghiệp vụ

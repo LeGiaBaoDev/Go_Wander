@@ -94,6 +94,7 @@ Vượt giới hạn → `429 RATE_LIMITED`, header `Retry-After` (giây).
 | `FORBIDDEN` | 403 | Chưa dùng ở v0 |
 | `NOT_FOUND` | 404 | Không có place/story, hoặc không được phép biết là có |
 | `CONFLICT` | 409 | `Idempotency-Key` khác payload |
+| `METHOD_NOT_ALLOWED` | 405 | Phương thức không được hỗ trợ cho endpoint |
 | `PAYLOAD_TOO_LARGE` | 413 | Body quá giới hạn |
 | `UNSUPPORTED_MEDIA_TYPE` | 415 | Loại nội dung không hỗ trợ |
 | `UNSUPPORTED` | 422 | Ngoài coverage hoặc mode/constraint không hỗ trợ; `details.reason` = `OUTSIDE_COVERAGE`, `MODE_NOT_SUPPORTED`, `CONSTRAINT_NOT_SUPPORTED` |
