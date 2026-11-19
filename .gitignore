@@ -42,3 +42,10 @@ backups/
 
 # Go build output
 backend/bin/
+
+# Mobile build output
+*.apk
+*.aab
+
+# Local infrastructure data (named volumes live outside the repo)
+infra/volumes/
