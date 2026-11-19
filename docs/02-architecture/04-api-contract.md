@@ -208,8 +208,10 @@ Trả cấu hình công khai, không bí mật:
       "id": "0192…",
       "code": "hcmc",
       "name": "TP.HCM",
+      "bbox": [106.36, 10.35, 107.03, 11.16],
       "modes": ["WALK", "BUS", "METRO", "BICYCLE"],
-      "dataStatus": "ASSUMED"
+      "dataStatus": "DEMO",
+      "graphVersion": "hcmc-2026-11-18-a1b2c3"
     }]
   },
   "features": { "stories": true, "bicycle": true, "feedback": true },
@@ -217,6 +219,9 @@ Trả cấu hình công khai, không bí mật:
 }
 ```
 
+- `bbox` là `[minLon, minLat, maxLon, maxLat]`, **chỉ để client chặn nhanh** điểm hiển nhiên ngoài vùng và báo sớm; server vẫn quyết định cuối bằng `ST_Intersects` trên polygon thật. `/routes/plan` vẫn trả `UNSUPPORTED` với `details.reason=OUTSIDE_COVERAGE`.
+- `graphVersion` là bản graph OTP đang dùng; `null` nếu chưa build graph.
+- `dataStatus` của vùng có thể `DEMO`/`ASSUMED`; client phải hiển thị đúng nhãn.
 - `Cache-Control: public, max-age=60` (đề xuất).
 - Không trả khoá Vietmap/OTP hay URL nội bộ.
 
@@ -476,16 +481,18 @@ Lưu ý thứ tự **lon, lat** của GeoJSON.
 3. **Reverse geocode không có địa chỉ**: trả **200** với `items: []`, không trả 404.
 4. **ETag**: không làm ở v0; thêm khi thấy bản đồ cần cache (xem “Chưa làm”).
 5. **`featured_rank`**: thêm cột `int` nullable vào `catalog.place`; danh sách “nổi bật” sắp `featured_rank` tăng dần (null xuống cuối), rồi khoảng cách nếu có `lat`/`lon`, cuối cùng theo tên.
+6. **Coverage công khai**: **không mở `GET /api/v1/coverage` ở v0**. Trả summary trong `/app/config`: `name`, `bbox` (`[minLon, minLat, maxLon, maxLat]`), `modes`, `dataStatus`, `graphVersion`. `bbox` chỉ để client chặn nhanh; server quyết định cuối bằng `ST_Intersects`; `/routes/plan` vẫn trả `UNSUPPORTED`/`OUTSIDE_COVERAGE`. Polygon đầy đủ để sau khi app cần vẽ ranh giới lên bản đồ.
 
 ### Còn mở
 
-1. Có mở `GET /api/v1/coverage` công khai không, hay chỉ trả trong `/app/config` và route response? (v0: không mở)
+Không còn câu hỏi chặn v0.
 
 ## 12. Việc tiếp theo
 
 ### Chưa làm ở v0
 
 - **`ETag`/`If-None-Match`/`304`: không làm.** Lý do: chưa thấy bản đồ cần cache; thêm khi đo thấy cần cache tile/danh sách place.
+- **`GET /api/v1/coverage` với polygon đầy đủ: chưa mở.** Thêm khi app cần vẽ ranh giới lên bản đồ; lúc đó polygon nặng và ít đổi nên mới cân nhắc `ETag`.
 - Endpoint Admin, auth client, Partner: các slice sau (xem mục 1), không tạo trước.
 
 ### Việc cần làm

@@ -14,11 +14,13 @@ info:
     name: GoWander
   license:
     name: Proprietary
+    identifier: LicenseRef-Proprietary
 servers:
   - url: /
     description: Cùng origin qua reverse proxy (Admin/Partner); client mobile dùng base URL cấu hình
   - url: http://localhost:8080
     description: Dev local
+security: []
 tags:
   - name: Health
     description: Kiểm tra sống/chết; không dữ liệu nghiệp vụ
@@ -1402,7 +1404,7 @@ components:
 
     CoverageArea:
       type: object
-      required: [id, code, name, modes, dataStatus]
+      required: [id, code, name, bbox, modes, dataStatus, graphVersion]
       properties:
         id:
           type: string
@@ -1411,12 +1413,26 @@ components:
           type: string
         name:
           type: string
+        bbox:
+          type: array
+          description: |
+            `[minLon, minLat, maxLon, maxLat]` (WGS84) — chỉ để client chặn nhanh
+            điểm hiển nhiên ngoài vùng. Server vẫn quyết định cuối bằng `ST_Intersects`
+            trên `mobility.coverage_area.area`.
+          minItems: 4
+          maxItems: 4
+          items:
+            type: number
+            format: double
         modes:
           type: array
           items:
             $ref: '#/components/schemas/Mode'
         dataStatus:
           $ref: '#/components/schemas/DataStatus'
+        graphVersion:
+          type: [string, 'null']
+          description: Phiên bản graph OTP đang dùng cho vùng; null nếu chưa build graph.
 
     RoutePlanRequest:
       type: object

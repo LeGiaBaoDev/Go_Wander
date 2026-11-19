@@ -259,6 +259,9 @@ PK `(place_id, media_id)`; partial unique `(place_id) where role='cover'` để 
 | `notes` | text | Nguồn biên giới/ngày cắt |
 | `created_at`, `updated_at` | timestamptz | |
 
+- `/api/v1/app/config` suy ra `coverage[].bbox` bằng `ST_XMin(area)`, `ST_YMin(area)`, `ST_XMax(area)`, `ST_YMax(area)` (hoặc `ST_Extent`); `modes`/`data_status` lấy trực tiếp; `graphVersion` là `mobility.graph_build.version` mới nhất `status='ready'` của vùng (`null` nếu chưa build). **Không thêm bảng/cột mới** cho summary này.
+- `bbox` chỉ là chỉ mục chặn nhanh ở client; kiểm coverage thật vẫn dùng `ST_Intersects(area, point)` (mục 7.4).
+
 #### `mobility.transit_feed`
 
 `id`, `feed_id` (unique; `metro_l1`, `bus_osm`), `name`, `source_id`, `data_status`, `valid_from`, `valid_to`, `checksum`, `built_at`, `notes`. Phần có nguồn/ước tính ghi trong `notes`; giá vé không nằm trong feed R1.
