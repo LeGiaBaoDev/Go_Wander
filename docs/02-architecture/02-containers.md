@@ -3,7 +3,7 @@
 - **Trạng thái:** Draft
 - **Ngày:** 18-11-2026
 - **Chủ sở hữu:** chủ dự án
-- **Liên quan:** `01-system-context.md`, `../03-decisions/ADR-0001-web-stack.md`
+- **Liên quan:** `01-system-context.md`, `03-data-model.md`, `04-api-contract.md`, `../03-decisions/ADR-0001-web-stack.md`
 
 ## TL;DR
 
@@ -172,7 +172,7 @@ Một máy/host hoặc docker compose:
 ## Việc tiếp theo
 
 - [ ] Duyệt file này.
-- [ ] Viết `03-data-model.md`.
-- [ ] Viết `04-api-contract.md`.
+- [x] Viết `03-data-model.md` (R1, 18-11-2026).
+- [x] Viết `04-api-contract.md` + `api/openapi.yaml` v0 (R1 công khai, 18-11-2026).
 - [ ] Viết `05-security-privacy.md`.
 - [x] ADR-0002 (Accepted R1), ADR-0003 (API/auth, Proposed), ADR-0004 (data/PostGIS, Proposed), ADR-0005 (tìm đường, Proposed).

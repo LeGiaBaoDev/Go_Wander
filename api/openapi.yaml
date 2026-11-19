@@ -1,0 +1,1728 @@
+openapi: 3.1.0
+info:
+  title: GoWander API
+  version: 0.1.0
+  description: |
+    Hợp đồng API v0 cho R1 (Client Mobile công khai).
+
+    - Trạng thái: **Proposed** — chờ chủ dự án chốt; xem `docs/02-architecture/04-api-contract.md`.
+    - Chỉ phủ API công khai R1: cấu hình, category, place, story, geocode, route, feedback.
+    - Chưa có endpoint Admin, auth client (R1.5) hay Partner (R6).
+    - Mọi lỗi dùng envelope `{error:{code,message,requestId,details?}}`; ngoài coverage trả `UNSUPPORTED`, không trả tuyến rỗng.
+    - Dữ liệu `DEMO`/`ASSUMED` phải được client hiển thị đúng nhãn.
+  contact:
+    name: GoWander
+  license:
+    name: Proprietary
+servers:
+  - url: /
+    description: Cùng origin qua reverse proxy (Admin/Partner); client mobile dùng base URL cấu hình
+  - url: http://localhost:8080
+    description: Dev local
+tags:
+  - name: Health
+    description: Kiểm tra sống/chết; không dữ liệu nghiệp vụ
+  - name: Config
+    description: Cấu hình công khai cho app
+  - name: Catalog
+    description: Category, place, story
+  - name: Geocode
+    description: Địa chỉ ↔ toạ độ
+  - name: Routing
+    description: Tìm tuyến TP.HCM
+  - name: Feedback
+    description: Phản hồi người dùng
+
+paths:
+  /health/live:
+    get:
+      tags: [Health]
+      operationId: healthLive
+      summary: Liveness
+      responses:
+        '200':
+          description: Tiến trình còn sống
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveStatus'
+  /health/ready:
+    get:
+      tags: [Health]
+      operationId: healthReady
+      summary: Readiness
+      responses:
+        '200':
+          description: DB và các phụ thuộc bắt buộc sẵn sàng
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadyStatus'
+        '503':
+          description: Chưa sẵn sàng
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadyStatus'
+
+  /api/v1/app/config:
+    get:
+      tags: [Config]
+      operationId: getAppConfig
+      summary: Cấu hình công khai của app
+      parameters:
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: Cấu hình công khai
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControl'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppConfig'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/Internal'
+
+  /api/v1/categories:
+    get:
+      tags: [Catalog]
+      operationId: listCategories
+      summary: Danh mục đang hoạt động
+      parameters:
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: Danh sách danh mục
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControl'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryList'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/Internal'
+
+  /api/v1/places:
+    get:
+      tags: [Catalog]
+      operationId: listPlaces
+      summary: Tìm/lọc địa điểm
+      description: |
+        Chỉ trả place `status=published`. `q` tìm theo tên (chuẩn hoá bỏ dấu);
+        `bbox` lọc khung bản đồ; `category` lặp được để lọc nhiều danh mục.
+        Khi không có `q`/`bbox`/`category`, danh sách "nổi bật" sắp theo
+        `featured_rank` tăng dần (null xuống cuối), rồi khoảng cách nếu có `lat`/`lon`,
+        cuối cùng theo tên. `sort=relevance` chỉ hợp lệ khi có `q`.
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 120
+        - name: category
+          in: query
+          description: Mã danh mục; lặp tham số để lọc nhiều
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+              maxLength: 40
+        - name: bbox
+          in: query
+          description: 'minLon,minLat,maxLon,maxLat (WGS84)'
+          schema:
+            type: string
+            pattern: '^-?[0-9.]+,-?[0-9.]+,-?[0-9.]+,-?[0-9.]+$'
+        - name: lat
+          in: query
+          description: Điểm tham chiếu để tính `distanceM` và sắp xếp; cần truyền cùng `lon`
+          schema:
+            type: number
+            format: double
+            minimum: -90
+            maximum: 90
+        - name: lon
+          in: query
+          description: Cần truyền cùng `lat`
+          schema:
+            type: number
+            format: double
+            minimum: -180
+            maximum: 180
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [relevance, name]
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: Trang place
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControl'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlacePage'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/Internal'
+
+  /api/v1/places/nearby:
+    get:
+      tags: [Catalog]
+      operationId: listPlacesNearby
+      summary: Địa điểm gần một toạ độ
+      description: Sắp xếp theo khoảng cách tăng dần; bán kính mặc định 2 km, tối đa 10 km.
+      parameters:
+        - $ref: '#/components/parameters/Latitude'
+        - $ref: '#/components/parameters/Longitude'
+        - name: radiusM
+          in: query
+          schema:
+            type: integer
+            minimum: 100
+            maximum: 10000
+            default: 2000
+        - name: category
+          in: query
+          description: Mã danh mục; lặp tham số để lọc nhiều
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: Trang place kèm `distanceM`
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControl'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlacePage'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/Internal'
+
+  /api/v1/places/{id}:
+    get:
+      tags: [Catalog]
+      operationId: getPlace
+      summary: Chi tiết địa điểm
+      parameters:
+        - $ref: '#/components/parameters/PlaceId'
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: Chi tiết place
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControl'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaceDetail'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/Internal'
+
+  /api/v1/stories:
+    get:
+      tags: [Catalog]
+      operationId: listStories
+      summary: Danh sách câu chuyện/guide
+      parameters:
+        - name: kind
+          in: query
+          schema:
+            type: string
+            enum: [historical, guide, food]
+        - name: lat
+          in: query
+          description: Cần truyền cùng `lon` để lọc “Gần bạn”
+          schema:
+            type: number
+            format: double
+            minimum: -90
+            maximum: 90
+        - name: lon
+          in: query
+          description: Cần truyền cùng `lat`
+          schema:
+            type: number
+            format: double
+            minimum: -180
+            maximum: 180
+        - name: radiusM
+          in: query
+          schema:
+            type: integer
+            minimum: 100
+            maximum: 10000
+            default: 2000
+        - name: hasAudio
+          in: query
+          schema:
+            type: boolean
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: Trang story
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControl'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoryPage'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/Internal'
+
+  /api/v1/stories/{slug}:
+    get:
+      tags: [Catalog]
+      operationId: getStory
+      summary: Chi tiết câu chuyện theo slug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 120
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: Chi tiết story
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControl'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoryDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/Internal'
+
+  /api/v1/geocode:
+    get:
+      tags: [Geocode]
+      operationId: geocode
+      summary: Địa chỉ/tên → toạ độ
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10
+            default: 5
+        - name: lat
+          in: query
+          description: Thiên vị kết quả gần; cần truyền cùng `lon`
+          schema:
+            type: number
+            format: double
+            minimum: -90
+            maximum: 90
+        - name: lon
+          in: query
+          description: Cần truyền cùng `lat`
+          schema:
+            type: number
+            format: double
+            minimum: -180
+            maximum: 180
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: Kết quả geocode (có thể rỗng)
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              $ref: '#/components/headers/NoStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeocodeResponse'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/Internal'
+
+  /api/v1/geocode/reverse:
+    get:
+      tags: [Geocode]
+      operationId: reverseGeocode
+      summary: Toạ độ → địa chỉ
+      parameters:
+        - $ref: '#/components/parameters/Latitude'
+        - $ref: '#/components/parameters/Longitude'
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: Kết quả reverse geocode (có thể rỗng)
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              $ref: '#/components/headers/NoStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeocodeResponse'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/Internal'
+
+  /api/v1/routes/plan:
+    post:
+      tags: [Routing]
+      operationId: planRoute
+      summary: Tìm tuyến trong TP.HCM
+      description: |
+        Pipeline: validate → coverage → snap → lọc luật → OTP → hậu kiểm → Pareto → 4 nhánh.
+        Ngoài coverage hoặc mode không hỗ trợ trả `UNSUPPORTED` trước khi gọi OTP.
+        Không trả route rỗng để che lỗi; nhánh không có trả `available:false` + `reason`.
+      parameters:
+        - $ref: '#/components/parameters/Locale'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoutePlanRequest'
+      responses:
+        '200':
+          description: Kết quả tìm tuyến
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              $ref: '#/components/headers/NoStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoutePlanResponse'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          description: |
+            Lỗi nghiệp vụ tìm tuyến. `error.code` là `UNSUPPORTED`, `NO_ROUTE`,
+            `DATA_UNAVAILABLE`, `ORIGIN_NOT_SNAPPABLE` hoặc `DESTINATION_NOT_SNAPPABLE`.
+            Với `UNSUPPORTED`, `details.reason` là `OUTSIDE_COVERAGE`,
+            `MODE_NOT_SUPPORTED` (mode hợp lệ nhưng không có trong coverage)
+            hoặc `CONSTRAINT_NOT_SUPPORTED`.
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                outsideCoverage:
+                  summary: Ngoài vùng phủ
+                  value:
+                    error:
+                      code: UNSUPPORTED
+                      message: Chưa hỗ trợ tìm tuyến tại khu vực này.
+                      requestId: req_01J8Z3K4M5N6P7Q8R9S0T1
+                      details:
+                        reason: OUTSIDE_COVERAGE
+                noRoute:
+                  summary: Không có tuyến thoả ràng buộc
+                  value:
+                    error:
+                      code: NO_ROUTE
+                      message: Không tìm được tuyến phù hợp.
+                      requestId: req_01J8Z3K4M5N6P7Q8R9S0T2
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/Internal'
+        '503':
+          $ref: '#/components/responses/RoutingUnavailable'
+        '504':
+          $ref: '#/components/responses/RoutingTimeout'
+
+  /api/v1/feedback:
+    post:
+      tags: [Feedback]
+      operationId: createFeedback
+      summary: Gửi phản hồi (guest được)
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Chuỗi do client sinh; cùng key + cùng payload trả lại kết quả cũ trong 24 giờ
+          schema:
+            type: string
+            minLength: 8
+            maxLength: 128
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackRequest'
+      responses:
+        '201':
+          description: Đã nhận phản hồi
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              $ref: '#/components/headers/NoStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackAccepted'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/Internal'
+
+components:
+  headers:
+    RequestId:
+      description: Mã truy vết request, cũng có trong error envelope
+      schema:
+        type: string
+    RetryAfter:
+      description: Số giây nên chờ trước khi thử lại
+      schema:
+        type: integer
+        minimum: 0
+    CacheControl:
+      description: Chính sách cache (giá trị cụ thể tuỳ endpoint)
+      schema:
+        type: string
+    NoStore:
+      description: Không cache
+      schema:
+        type: string
+        const: 'no-store'
+
+  parameters:
+    Locale:
+      name: locale
+      in: query
+      description: Ngôn ngữ mong muốn; fallback `vi`
+      schema:
+        type: string
+        enum: [vi, en]
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+        default: 20
+    Cursor:
+      name: cursor
+      in: query
+      description: Con trỏ opaque từ `nextCursor` của trang trước
+      schema:
+        type: string
+        maxLength: 512
+    Latitude:
+      name: lat
+      in: query
+      required: true
+      schema:
+        type: number
+        format: double
+        minimum: -90
+        maximum: 90
+    Longitude:
+      name: lon
+      in: query
+      required: true
+      schema:
+        type: number
+        format: double
+        minimum: -180
+        maximum: 180
+    PlaceId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    ValidationFailed:
+      description: Dữ liệu đầu vào không hợp lệ
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: VALIDATION_FAILED
+              message: Toạ độ không hợp lệ.
+              requestId: req_01J8Z3K4M5N6P7Q8R9S0T3
+              details:
+                field: origin.lat
+    NotFound:
+      description: Không tìm thấy tài nguyên
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: NOT_FOUND
+              message: Không tìm thấy địa điểm.
+              requestId: req_01J8Z3K4M5N6P7Q8R9S0T4
+    Conflict:
+      description: Xung đột trạng thái hoặc idempotency key
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: CONFLICT
+              message: Idempotency-Key đã dùng với nội dung khác.
+              requestId: req_01J8Z3K4M5N6P7Q8R9S0T5
+    PayloadTooLarge:
+      description: Body vượt giới hạn
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UnsupportedMediaType:
+      description: Content-Type không hỗ trợ
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    RateLimited:
+      description: Vượt giới hạn tần suất
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: RATE_LIMITED
+              message: Bạn thao tác quá nhanh, vui lòng thử lại sau.
+              requestId: req_01J8Z3K4M5N6P7Q8R9S0T6
+    ServiceUnavailable:
+      description: Phụ thuộc (DB/geocoder/media) không sẵn sàng
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: DEPENDENCY_UNAVAILABLE
+              message: Dịch vụ tạm thời không sẵn sàng.
+              requestId: req_01J8Z3K4M5N6P7Q8R9S0T7
+    RoutingUnavailable:
+      description: OTP lỗi hoặc không kết nối được
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: ROUTING_UNAVAILABLE
+              message: Tạm thời chưa tìm được tuyến, vui lòng thử lại.
+              requestId: req_01J8Z3K4M5N6P7Q8R9S0T8
+    RoutingTimeout:
+      description: Quá deadline tìm tuyến
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: ROUTING_TIMEOUT
+              message: Tìm tuyến quá lâu, vui lòng thử lại.
+              requestId: req_01J8Z3K4M5N6P7Q8R9S0T9
+    Internal:
+      description: Lỗi không lường trước
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: INTERNAL
+              message: Có lỗi xảy ra.
+              requestId: req_01J8Z3K4M5N6P7Q8R9S0TA
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, requestId]
+          properties:
+            code:
+              type: string
+              description: Mã ổn định, viết hoa gạch dưới
+              examples:
+                - VALIDATION_FAILED
+                - NOT_FOUND
+                - UNSUPPORTED
+                - NO_ROUTE
+                - RATE_LIMITED
+            message:
+              type: string
+              description: Thông điệp theo locale, không lộ chi tiết nội bộ
+            requestId:
+              type: string
+            details:
+              type: [object, 'null']
+              additionalProperties: true
+              description: Chỉ dữ liệu an toàn (field lỗi, reason, maxSnapM…)
+
+    LiveStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          const: ok
+
+    ReadyStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok, unavailable]
+        checks:
+          type: object
+          additionalProperties:
+            type: string
+          description: Tên phụ thuộc → trạng thái, không chứa chi tiết nội bộ
+
+    DataStatus:
+      type: string
+      enum: [DEMO, OFFICIAL, ASSUMED, BEST_EFFORT]
+
+    RouteDataStatus:
+      type: string
+      enum: [OFFICIAL, ASSUMED, BEST_EFFORT, UNSUPPORTED]
+
+    Mode:
+      type: string
+      enum: [WALK, BUS, METRO, BICYCLE]
+
+    Verification:
+      type: string
+      enum: [unverified, verified, official]
+
+    LegalityStatus:
+      type: string
+      enum: [FILTERED, PARTIAL, UNKNOWN]
+
+    LatLon:
+      type: object
+      required: [lat, lon]
+      properties:
+        lat:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        lon:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+
+    Waypoint:
+      type: object
+      required: [lat, lon]
+      properties:
+        lat:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        lon:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+        name:
+          type: string
+          maxLength: 200
+        placeId:
+          type: [string, 'null']
+          format: uuid
+
+    SourceRef:
+      type: object
+      required: [code, name, licenseCode, attribution]
+      properties:
+        code:
+          type: string
+          examples: [osm, demo, vietmap]
+        name:
+          type: string
+        licenseCode:
+          type: string
+          examples: [ODbL-1.0, CC-BY-4.0, internal]
+        licenseUrl:
+          type: [string, 'null']
+          format: uri
+        attribution:
+          type: string
+
+    MediaRef:
+      type: object
+      required: [id, url, width, height, credit, licenseCode]
+      properties:
+        id:
+          type: string
+          format: uuid
+        url:
+          type: string
+          format: uri
+        width:
+          type: integer
+          minimum: 1
+        height:
+          type: integer
+          minimum: 1
+        credit:
+          type: string
+        licenseCode:
+          type: string
+        licenseUrl:
+          type: [string, 'null']
+          format: uri
+        sourceUrl:
+          type: [string, 'null']
+          format: uri
+        mime:
+          type: [string, 'null']
+
+    CategoryRef:
+      type: object
+      required: [id, code, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+
+    Category:
+      type: object
+      required: [id, code, name, sortOrder]
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        icon:
+          type: [string, 'null']
+        sortOrder:
+          type: integer
+        parentId:
+          type: [string, 'null']
+          format: uuid
+
+    CategoryList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+
+    PlaceSummary:
+      type: object
+      required: [id, slug, name, category, location, verification, dataStatus, source]
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        name:
+          type: string
+        category:
+          $ref: '#/components/schemas/CategoryRef'
+        location:
+          $ref: '#/components/schemas/LatLon'
+        address:
+          type: [string, 'null']
+        distanceM:
+          type: [integer, 'null']
+          minimum: 0
+        verification:
+          $ref: '#/components/schemas/Verification'
+        dataStatus:
+          $ref: '#/components/schemas/DataStatus'
+        source:
+          $ref: '#/components/schemas/SourceRef'
+        cover:
+          oneOf:
+            - $ref: '#/components/schemas/MediaRef'
+            - type: 'null'
+
+    PlaceDetail:
+      allOf:
+        - $ref: '#/components/schemas/PlaceSummary'
+        - type: object
+          properties:
+            summary:
+              type: [string, 'null']
+            description:
+              type: [string, 'null']
+            openingHours:
+              type: [string, 'null']
+            phone:
+              type: [string, 'null']
+            website:
+              type: [string, 'null']
+              format: uri
+            priceLevel:
+              type: [integer, 'null']
+              minimum: 1
+              maximum: 4
+            indoor:
+              type: [boolean, 'null']
+            wheelchair:
+              type: [boolean, 'null']
+            entrance:
+              oneOf:
+                - $ref: '#/components/schemas/LatLon'
+                - type: 'null'
+            categories:
+              type: array
+              items:
+                $ref: '#/components/schemas/CategoryRef'
+            media:
+              type: array
+              items:
+                $ref: '#/components/schemas/MediaRef'
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+
+    PlacePage:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlaceSummary'
+        nextCursor:
+          type: [string, 'null']
+
+    StorySummary:
+      type: object
+      required: [id, slug, kind, title, placeCount, dataStatus, publishedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        kind:
+          type: string
+          enum: [historical, guide, food]
+        title:
+          type: string
+        summary:
+          type: [string, 'null']
+        cover:
+          oneOf:
+            - $ref: '#/components/schemas/MediaRef'
+            - type: 'null'
+        readTimeMin:
+          type: [integer, 'null']
+          minimum: 1
+        audioDurationS:
+          type: [integer, 'null']
+          minimum: 0
+        placeCount:
+          type: integer
+          minimum: 0
+        dataStatus:
+          $ref: '#/components/schemas/DataStatus'
+        publishedAt:
+          type: string
+          format: date-time
+
+    StoryPage:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/StorySummary'
+        nextCursor:
+          type: [string, 'null']
+
+    StoryDetail:
+      allOf:
+        - $ref: '#/components/schemas/StorySummary'
+        - type: object
+          required: [blocks, media, places, attribution]
+          properties:
+            blocks:
+              type: array
+              items:
+                $ref: '#/components/schemas/StoryBlock'
+            media:
+              type: array
+              items:
+                $ref: '#/components/schemas/MediaRef'
+            places:
+              type: array
+              items:
+                $ref: '#/components/schemas/PlaceSummary'
+            attribution:
+              type: string
+
+    StoryBlock:
+      oneOf:
+        - $ref: '#/components/schemas/ParagraphBlock'
+        - $ref: '#/components/schemas/HeaderBlock'
+        - $ref: '#/components/schemas/ListBlock'
+        - $ref: '#/components/schemas/QuoteBlock'
+        - $ref: '#/components/schemas/ImageBlock'
+        - $ref: '#/components/schemas/ImageCompareBlock'
+        - $ref: '#/components/schemas/TimelineBlock'
+        - $ref: '#/components/schemas/PlaceCardBlock'
+        - $ref: '#/components/schemas/AudioBlock'
+        - $ref: '#/components/schemas/VideoBlock'
+        - $ref: '#/components/schemas/DividerBlock'
+      discriminator:
+        propertyName: type
+        mapping:
+          paragraph: '#/components/schemas/ParagraphBlock'
+          header: '#/components/schemas/HeaderBlock'
+          list: '#/components/schemas/ListBlock'
+          quote: '#/components/schemas/QuoteBlock'
+          image: '#/components/schemas/ImageBlock'
+          imageCompare: '#/components/schemas/ImageCompareBlock'
+          timeline: '#/components/schemas/TimelineBlock'
+          placeCard: '#/components/schemas/PlaceCardBlock'
+          audio: '#/components/schemas/AudioBlock'
+          video: '#/components/schemas/VideoBlock'
+          divider: '#/components/schemas/DividerBlock'
+
+    ParagraphBlock:
+      type: object
+      required: [type, text]
+      properties:
+        type:
+          type: string
+          const: paragraph
+        text:
+          type: string
+
+    HeaderBlock:
+      type: object
+      required: [type, text, level]
+      properties:
+        type:
+          type: string
+          const: header
+        text:
+          type: string
+        level:
+          type: integer
+          minimum: 1
+          maximum: 6
+
+    ListBlock:
+      type: object
+      required: [type, items]
+      properties:
+        type:
+          type: string
+          const: list
+        ordered:
+          type: boolean
+          default: false
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: string
+
+    QuoteBlock:
+      type: object
+      required: [type, text]
+      properties:
+        type:
+          type: string
+          const: quote
+        text:
+          type: string
+        attribution:
+          type: [string, 'null']
+
+    ImageBlock:
+      type: object
+      required: [type, mediaId]
+      properties:
+        type:
+          type: string
+          const: image
+        mediaId:
+          type: string
+          format: uuid
+        caption:
+          type: [string, 'null']
+
+    ImageCompareBlock:
+      type: object
+      required: [type, beforeMediaId, afterMediaId]
+      properties:
+        type:
+          type: string
+          const: imageCompare
+        beforeMediaId:
+          type: string
+          format: uuid
+        afterMediaId:
+          type: string
+          format: uuid
+        caption:
+          type: [string, 'null']
+
+    TimelineEvent:
+      type: object
+      required: [date, title]
+      properties:
+        date:
+          type: string
+        title:
+          type: string
+        description:
+          type: [string, 'null']
+
+    TimelineBlock:
+      type: object
+      required: [type, events]
+      properties:
+        type:
+          type: string
+          const: timeline
+        events:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/TimelineEvent'
+
+    PlaceCardBlock:
+      type: object
+      required: [type, placeId]
+      properties:
+        type:
+          type: string
+          const: placeCard
+        placeId:
+          type: string
+          format: uuid
+
+    AudioBlock:
+      type: object
+      required: [type, mediaId]
+      properties:
+        type:
+          type: string
+          const: audio
+        mediaId:
+          type: string
+          format: uuid
+        title:
+          type: [string, 'null']
+        durationS:
+          type: [integer, 'null']
+          minimum: 0
+
+    VideoBlock:
+      type: object
+      required: [type, mediaId]
+      properties:
+        type:
+          type: string
+          const: video
+        mediaId:
+          type: string
+          format: uuid
+        title:
+          type: [string, 'null']
+        durationS:
+          type: [integer, 'null']
+          minimum: 0
+
+    DividerBlock:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          const: divider
+
+    GeocodeResult:
+      type: object
+      required: [name, location, source]
+      properties:
+        name:
+          type: string
+        address:
+          type: [string, 'null']
+        location:
+          $ref: '#/components/schemas/LatLon'
+        category:
+          type: [string, 'null']
+        placeId:
+          type: [string, 'null']
+          format: uuid
+          description: Chỉ có khi kết quả trùng một place đã publish trong DB GoWander
+        source:
+          $ref: '#/components/schemas/SourceRef'
+
+    GeocodeResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeocodeResult'
+
+    AppConfig:
+      type: object
+      required: [minAppVersion, locales, defaultLocale, map, coverage, features]
+      properties:
+        minAppVersion:
+          type: object
+          required: [android, ios]
+          properties:
+            android:
+              type: string
+            ios:
+              type: string
+        locales:
+          type: array
+          items:
+            type: string
+            enum: [vi, en]
+        defaultLocale:
+          type: string
+          enum: [vi, en]
+        map:
+          type: object
+          required: [styleUrl, attribution]
+          properties:
+            styleUrl:
+              type: string
+              format: uri
+            attribution:
+              type: string
+        coverage:
+          type: object
+          required: [areas]
+          properties:
+            areas:
+              type: array
+              items:
+                $ref: '#/components/schemas/CoverageArea'
+        features:
+          type: object
+          additionalProperties:
+            type: boolean
+        maintenance:
+          type: [object, 'null']
+          additionalProperties: true
+
+    CoverageArea:
+      type: object
+      required: [id, code, name, modes, dataStatus]
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        modes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Mode'
+        dataStatus:
+          $ref: '#/components/schemas/DataStatus'
+
+    RoutePlanRequest:
+      type: object
+      required: [origin, destination, modes]
+      properties:
+        origin:
+          $ref: '#/components/schemas/Waypoint'
+        destination:
+          $ref: '#/components/schemas/Waypoint'
+        modes:
+          type: array
+          description: |
+            Một hoặc nhiều mode. `bike` trong yêu cầu sản phẩm = `BICYCLE`.
+            `BUS`/`METRO` được có leg đi bộ nối. Giá trị ngoài enum →
+            `VALIDATION_FAILED`; mode hợp lệ nhưng không có trong coverage →
+            `UNSUPPORTED` với `details.reason=MODE_NOT_SUPPORTED`.
+          minItems: 1
+          maxItems: 4
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Mode'
+        departAt:
+          type: string
+          format: date-time
+          description: ISO 8601 có offset; mặc định hiện tại; quá khứ > 5 phút bị từ chối
+        geometry:
+          type: string
+          enum: [polyline, geojson]
+          default: polyline
+          description: |
+            Định dạng hình học của leg/step. `polyline` = encoded polyline
+            precision 5 (1e5), mặc định. `geojson` = GeoJSON LineString
+            (toạ độ theo thứ tự [lon, lat]).
+        constraints:
+          type: object
+          properties:
+            avoidStairs:
+              type: boolean
+              default: false
+            wheelchair:
+              type: boolean
+              default: false
+      examples:
+        - origin:
+            lat: 10.770000
+            lon: 106.690000
+            name: Điểm đi
+          destination:
+            lat: 10.771000
+            lon: 106.692000
+            name: Trạm Bến Thành
+          modes: [WALK, BUS]
+          departAt: '2026-11-19T09:00:00+07:00'
+          geometry: polyline
+
+    RoutePlanResponse:
+      type: object
+      required: [requestId, graphVersion, dataStatus, coverage, routes, branches, assumptions]
+      properties:
+        requestId:
+          type: string
+        graphVersion:
+          type: string
+        dataStatus:
+          $ref: '#/components/schemas/RouteDataStatus'
+        coverage:
+          $ref: '#/components/schemas/CoverageInfo'
+        routes:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/Route'
+        branches:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items:
+            $ref: '#/components/schemas/RouteBranch'
+        assumptions:
+          type: array
+          items:
+            type: string
+          examples:
+            - [FARE_ASSUMED, SCHEDULE_ASSUMED]
+
+    CoverageInfo:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [SUPPORTED, UNSUPPORTED]
+        areaId:
+          type: [string, 'null']
+          format: uuid
+        modes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Mode'
+
+    Route:
+      type: object
+      required: [id, metrics, legs, legality]
+      properties:
+        id:
+          type: string
+        metrics:
+          $ref: '#/components/schemas/RouteMetrics'
+        legs:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/RouteLeg'
+        legality:
+          $ref: '#/components/schemas/Legality'
+
+    RouteMetrics:
+      type: object
+      required: [durationS, distanceM, walkM, fareStatus, transfers, waitingS]
+      properties:
+        durationS:
+          type: integer
+          minimum: 0
+        distanceM:
+          type: integer
+          minimum: 0
+        walkM:
+          type: integer
+          minimum: 0
+        fareVnd:
+          type: [integer, 'null']
+          minimum: 0
+        fareStatus:
+          type: string
+          enum: [OFFICIAL, ASSUMED, UNKNOWN]
+        transfers:
+          type: integer
+          minimum: 0
+        waitingS:
+          type: integer
+          minimum: 0
+
+    RouteLeg:
+      type: object
+      required: [mode, from, to, startAt, endAt, distanceM, geometry, realtime]
+      properties:
+        mode:
+          $ref: '#/components/schemas/Mode'
+        from:
+          $ref: '#/components/schemas/Waypoint'
+        to:
+          $ref: '#/components/schemas/Waypoint'
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        distanceM:
+          type: integer
+          minimum: 0
+        geometry:
+          description: |
+            `polyline` (mặc định): encoded polyline precision 5 (1e5).
+            `geojson`: GeoJSON LineString. Chọn bằng field `geometry` ở request.
+          oneOf:
+            - type: string
+            - $ref: '#/components/schemas/GeoJSONLineString'
+        routeName:
+          type: [string, 'null']
+          examples: ['L1', 'Bus 01']
+        headsign:
+          type: [string, 'null']
+        realtime:
+          type: boolean
+          const: false
+        steps:
+          type: [array, 'null']
+          items:
+            $ref: '#/components/schemas/RouteStep'
+
+    RouteStep:
+      type: object
+      required: [instruction, distanceM]
+      properties:
+        instruction:
+          type: string
+          enum: [CONTINUE, TURN_LEFT, TURN_RIGHT, UTURN, ARRIVE, DEPART]
+        streetName:
+          type: [string, 'null']
+        distanceM:
+          type: integer
+          minimum: 0
+        geometry:
+          description: Cùng định dạng với leg (`polyline` precision 5 hoặc GeoJSON LineString)
+          oneOf:
+            - type: string
+            - $ref: '#/components/schemas/GeoJSONLineString'
+            - type: 'null'
+
+    GeoJSONLineString:
+      type: object
+      required: [type, coordinates]
+      properties:
+        type:
+          type: string
+          const: LineString
+        coordinates:
+          type: array
+          minItems: 2
+          description: Mảng [lon, lat] theo thứ tự GeoJSON (không phải [lat, lon])
+          items:
+            type: array
+            minItems: 2
+            maxItems: 2
+            prefixItems:
+              - type: number
+                minimum: -180
+                maximum: 180
+                description: Kinh độ
+              - type: number
+                minimum: -90
+                maximum: 90
+                description: Vĩ độ
+
+    Legality:
+      type: object
+      required: [status, unverifiedRules]
+      properties:
+        status:
+          $ref: '#/components/schemas/LegalityStatus'
+        unverifiedRules:
+          type: array
+          items:
+            type: string
+          examples:
+            - [CONDITIONAL_ACCESS, TURN_RESTRICTION_DATA]
+
+    RouteBranch:
+      type: object
+      required: [kind, available, reasons]
+      properties:
+        kind:
+          type: string
+          enum: [recommended, fastest, shortest, cheapest]
+        routeId:
+          type: [string, 'null']
+        available:
+          type: boolean
+        score:
+          type: [number, 'null']
+          minimum: 0
+          maximum: 1
+        reasons:
+          type: array
+          items:
+            $ref: '#/components/schemas/BranchReason'
+        reason:
+          type: [string, 'null']
+          description: Chỉ khi `available=false`; ví dụ FARE_UNKNOWN, TIME_CAP_1_5, TIME_CAP_2_0, NO_FASTEST_CANDIDATE
+
+    BranchReason:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          examples: [BEST_OVERALL, LEGAL_FILTER_APPLIED, DATA_ASSUMED]
+        params:
+          type: object
+          additionalProperties: true
+
+    FeedbackRequest:
+      type: object
+      required: [category, message]
+      properties:
+        category:
+          type: string
+          enum: [route, place, app, other]
+        message:
+          type: string
+          minLength: 10
+          maxLength: 2000
+        contactEmail:
+          type: [string, 'null']
+          format: email
+        contactPhone:
+          type: [string, 'null']
+          maxLength: 32
+        appVersion:
+          type: [string, 'null']
+          maxLength: 32
+        locale:
+          type: string
+          enum: [vi, en]
+
+    FeedbackAccepted:
+      type: object
+      required: [id, status, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          const: new
+        createdAt:
+          type: string
+          format: date-time
