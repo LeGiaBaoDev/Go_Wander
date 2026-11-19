@@ -22,9 +22,15 @@ Repo cũ đã đi qua nhiều milestone, nhiều quyết định và nhiều tha
 ```text
 GoWander-v2/
   README.md
+  AGENTS.md
+  .env.example
   .gitignore
+  api/                 # openapi.yaml (nguồn sự thật hợp đồng)
+  backend/             # Go API: cmd/api, cmd/migrate, internal/<module>, migrations/
+  mobile/              # KMP + Compose: shared/ (Android + iOS), androidApp/
+  infra/               # docker-compose.yml (Postgres + PostGIS)
+  .github/workflows/   # CI: backend, mobile, OpenAPI
   docs/
-    README.md
     00-foundation/     # vì sao, phạm vi, nguyên tắc, glossary
     01-product/        # người dùng, tính năng, UX
     02-architecture/   # hệ thống, container, dữ liệu, API, bảo mật
@@ -37,9 +43,55 @@ GoWander-v2/
     evidence/          # ảnh/log/biên bản kiểm chứng
 ```
 
-> Thư mục `04-development/`, `05-operations/`, `templates/`, `evidence/` chưa tồn tại; tạo khi có file đầu tiên (git không lưu thư mục rỗng).
+> Khung code R1 đã có: backend health API + migration bootstrap, mobile Compose rỗng, compose Postgres/PostGIS, CI. **Chưa có tính năng sản phẩm** (place/route/geocode) — các slice đó làm sau.
 
-Chưa có code. Khi docs được duyệt, code sẽ được thêm theo từng vertical slice, mỗi slice có ADR/change record/evidence.
+## Cách chạy local
+
+Yêu cầu: Go 1.27+, JDK 21, Android SDK (API 37 + build-tools 36), Docker Desktop (cho DB), Xcode 27 (tuỳ chọn iOS). Phiên bản đã kiểm 19-11-2026 ở [`docs/04-development/01-toolchain.md`](./docs/04-development/01-toolchain.md).
+
+```bash
+cp .env.example .env
+docker compose -f infra/docker-compose.yml up -d
+
+cd backend
+go run ./cmd/migrate up
+go run ./cmd/api
+```
+
+Kiểm tra API:
+
+```bash
+curl http://localhost:8080/health/live   # 200 {"status":"ok"}
+curl http://localhost:8080/health/ready  # 200 nếu DB sẵn sàng; 503 nếu chưa
+```
+
+Backend:
+
+```bash
+cd backend
+go test ./...
+go vet ./...
+golangci-lint run ./...
+```
+
+Mobile:
+
+```bash
+cd mobile
+./gradlew :androidApp:assembleDebug
+./gradlew ktlintCheck detekt
+./gradlew :shared:linkDebugFrameworkIosSimulatorArm64
+```
+
+APK ở `mobile/androidApp/build/outputs/apk/debug/androidApp-debug.apk`. Build Android local cần `mobile/local.properties` với `sdk.dir=...` (đã gitignore) hoặc biến `ANDROID_HOME`.
+
+OpenAPI:
+
+```bash
+npx --yes @redocly/cli@2.80.0 lint api/openapi.yaml
+```
+
+> 19-11-2026: Docker Desktop đã khởi động lại; PostGIS 17-3.5 chạy qua `linux/amd64` (Rosetta) vì image chính thức chưa có arm64. Migration up/down/up và `/health/ready` với DB đã chạy. Android đã chạy trên emulator API 37.0; iOS mới link framework, chưa có app Xcode.
 
 ## Đọc trước
 
@@ -67,6 +119,6 @@ Chưa có code. Khi docs được duyệt, code sẽ được thêm theo từng 
 - [ ] Duyệt `docs/00-foundation/05-legacy-carryover.md` (kế thừa từ repo cũ).
 - [ ] R0.5: Figma design tokens + R1 screens + prototype before UI code.
 - [ ] Duyệt Showcase Web + brand + saved/contributed places (`docs/01-product/04`, `05`, `06`).
-- [ ] Chốt API contract v0.
+- [x] Chốt API contract v0 (`docs/02-architecture/04-api-contract.md` + `api/openapi.yaml`).
 - [ ] Chốt data source inventory + trạng thái pháp lý.
-- [ ] Dựng repo code + CI + môi trường local.
+- [x] Dựng repo code + CI + môi trường local (migration up/down/up đã chạy 19-11-2026; CI chưa chạy trên GitHub).

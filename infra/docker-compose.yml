@@ -1,0 +1,30 @@
+name: gowander
+
+services:
+  postgres:
+    image: postgis/postgis:17-3.5
+    # Official postgis image publishes linux/amd64 only; Apple Silicon runs it via Rosetta.
+    platform: linux/amd64
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gowander}
+      POSTGRES_USER: ${POSTGRES_USER:-gowander}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - gowander_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-gowander} -d ${POSTGRES_DB:-gowander}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  gowander_pgdata:
+    name: gowander_pgdata
