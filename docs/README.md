@@ -35,11 +35,13 @@ README.md
     → 01-product/10-business-model.md
     → 02-architecture/01-system-context.md
     → 02-architecture/02-containers.md
+    → 02-architecture/03-data-model.md
+    → 02-architecture/04-api-contract.md
     → 03-decisions/README.md (đọc các ADR đã Accepted)
     → 06-research/README.md
 ```
 
-Các file sau **chưa viết** (xem “Việc cần viết tiếp”): `01-product/01-users.md`, `02-feature-map.md`, `02-architecture/03-data-model.md`, `04-api-contract.md`, `05-security-privacy.md`.
+Các file sau **chưa viết** (xem “Việc cần viết tiếp”): `01-product/01-users.md`, `02-feature-map.md`, `02-architecture/05-security-privacy.md`.
 
 Khi code bắt đầu, `04-development/04-reading-order.md` sẽ mở rộng thành thứ tự đọc code (docs → backend → mobile → test).
 
@@ -90,8 +92,9 @@ Repo cũ: `../GoWander`.
 - [ ] Cập nhật Design System artifact sang palette v4.
 - [ ] Luật sư rà giấy tờ đăng ký hợp tác và nghĩa vụ TMĐT (trước khi bật thanh toán trong app ở giai đoạn 3).
 - [ ] Viết `01-product/01-users.md`, `02-feature-map.md`.
-- [ ] Viết `02-architecture/04-api-contract.md` (kèm `dataStatus`, `UNSUPPORTED`), `05-security-privacy.md`.
-- [ ] Viết `02-architecture/03-data-model.md` — chốt entity/ownership.
+- [x] Viết `02-architecture/04-api-contract.md` (kèm `dataStatus`, `UNSUPPORTED`) và `api/openapi.yaml` v0.
+- [ ] Viết `02-architecture/05-security-privacy.md`.
+- [x] Viết `02-architecture/03-data-model.md` — chốt entity/ownership cho R1.
 - [x] `03-decisions/ADR-0001-web-stack.md` — đã chốt.
 - [x] Viết `03-decisions/ADR-0003-api-contract-auth-rbac.md`, `ADR-0004-data-model-postgis.md`, `ADR-0005-routing-algorithm.md` (Proposed, 18-11-2026).
 - [x] ADR-0002 Accepted cho R1 (18-11-2026); [ ] duyệt ADR-0003/0004/0005 (vẫn Proposed).
